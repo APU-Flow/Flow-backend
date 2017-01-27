@@ -12,12 +12,11 @@ app.get('/api/usageEvent', function(req, res){
   var startTimeVal = req.param('startTime')
   var endTimeVal = req.param('endTime')
   var totalVolumeVal = req.param('totalVolume')
+  console.log("New Usage Event logged!")
   console.log(idVal)
   console.log(startTimeVal)
   console.log(endTimeVal)
   console.log(totalVolumeVal)
-
-
   /*
   MongoClient.connect(dburl, function(err, db) {
     if (err) return
@@ -31,6 +30,24 @@ app.get('/api/usageEvent', function(req, res){
     })
   })
   */
+})
+
+
+app.get('/api/newUser', function(req, res){
+  var firstName = req.param('firstName');
+  var lastName = req.param('lastName');
+  var streetAddress = req.param('streetAddress');
+  var city = req.param('city');
+  var state = req.param('state');
+  var email = req.param('email');
+  var password = req.param('password')
+  console.log("New user registered");
+  console.log(firstName);
+  console.log(lastName);
+  console.log(city);
+  console.log(state);
+  console.log(email);
+  console.log(password);
 })
 
 
