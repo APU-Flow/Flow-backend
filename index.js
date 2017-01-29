@@ -54,7 +54,7 @@ app.get('/api/newUser', function(req, res){
 
 app.get('/api/login', function(req, res){
   var email = req.param('email')
-  var password = req.password('email')
+  var password = req.param('password')
   console.log("The user @ " + email + " attempted to log in")
   //todo: actual things
 })
