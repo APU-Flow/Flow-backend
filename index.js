@@ -7,11 +7,16 @@ app.listen(3000, function () {
 })
 
 //here are some routes
-app.get('/api/usageEvent', function(req, res){
-  var idVal = req.param('id');
-  var startTimeVal = req.param('startTime')
-  var endTimeVal = req.param('endTime')
-  var totalVolumeVal = req.param('totalVolume')
+app.route('/api/usageEvent').post(function(req, res){
+  console.log(req)
+  res.send('You sent: ${body} to Express')
+
+  var idVal = req.body.id;
+  var startTimeVal = req.body.startTime
+  var endTimeVal = req.body.endTime
+  var totalVolumeVal = req.body.totalVolume
+  console.log("");
+  console.log("-------------------------")
   console.log("New Usage Event logged!")
   console.log(idVal)
   console.log(startTimeVal)
@@ -33,7 +38,7 @@ app.get('/api/usageEvent', function(req, res){
 })
 
 
-app.get('/api/newUser', function(req, res){
+app.route('/api/newUser').post(function(req, res){
   var firstName = req.param('firstName');
   var lastName = req.param('lastName');
   var streetAddress = req.param('streetAddress');
@@ -52,7 +57,7 @@ app.get('/api/newUser', function(req, res){
 
 
 
-app.get('/api/login', function(req, res){
+app.route('/api/login').post(function(req, res){
   var email = req.param('email')
   var password = req.param('password')
   console.log("The user @ " + email + " attempted to log in")
