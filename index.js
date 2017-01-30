@@ -39,6 +39,7 @@ app.route('/api/usageEvent').post(function(req, res){
 
 
 app.route('/api/newUser').post(function(req, res){
+  /*
   var firstName = req.body.firstName;
   var lastName = req.body.lastName;
   var streetAddress = req.body.streetAddress;
@@ -53,6 +54,8 @@ app.route('/api/newUser').post(function(req, res){
   console.log(state);
   console.log(email);
   console.log(password);
+  */
+  console.log(req.body)
 })
 
 
