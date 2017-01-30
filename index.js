@@ -39,13 +39,13 @@ app.route('/api/usageEvent').post(function(req, res){
 
 
 app.route('/api/newUser').post(function(req, res){
-  var firstName = req.param('firstName');
-  var lastName = req.param('lastName');
-  var streetAddress = req.param('streetAddress');
-  var city = req.param('city');
-  var state = req.param('state');
-  var email = req.param('email');
-  var password = req.param('password')
+  var firstName = req.body.firstName;
+  var lastName = req.body.lastName;
+  var streetAddress = req.body.streetAddress;
+  var city = req.body.city;
+  var state = req.body.state;
+  var email = req.body.email;
+  var password = req.body.password
   console.log("New user registered");
   console.log(firstName);
   console.log(lastName);
