@@ -13,7 +13,7 @@ app.listen(port);
 //here are some routes
 app.post('/api/usageEvent', function(req, res){
   console.log(req)
-  res.send('You sent: ${body} to Express')
+  res.send('You sent a usageEvent to Express')
 
   var idVal = req.body.id;
   var startTimeVal = req.body.startTime
@@ -43,6 +43,7 @@ app.post('/api/usageEvent', function(req, res){
 
 
 app.post('/api/newUser', function(req, res){
+  res.send("You sent a new user to express")
   var firstName = req.body.firstName;
   var lastName = req.body.lastName;
   var streetAddress = req.body.streetAddress;
@@ -65,5 +66,6 @@ app.post('/api/login', function(req, res){
   var email = req.param('email')
   var password = req.param('password')
   console.log("The user @ " + email + " attempted to log in")
+  res.send("You attempted to login")
   //todo: actual things
 });
