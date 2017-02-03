@@ -1,22 +1,34 @@
 var express = require('express')
-var MongoClient = require('mongodb').MongoClient
 var app = express()
-var dburl = 'mongodb://localhost:27017/flow'
-app.listen(3000, function () {
-  console.log('FLOW listening on port 3000!')
-})
+var port = 3000
+var bodyParser = require('body-parser');
+var date = new Date();
+app.use( bodyParser.json() );
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
+
+
+app.listen(port);
 
 //here are some routes
-app.get('/api/usageEvent', function(req, res){
-  var idVal = req.param('id');
-  var startTimeVal = req.param('startTime')
-  var endTimeVal = req.param('endTime')
-  var totalVolumeVal = req.param('totalVolume')
+app.post('/api/usageEvent', function(req, res){
+  console.log(req)
+  res.send('You sent a usageEvent to Express')
+
+  var idVal = req.body.id;
+  var startTimeVal = req.body.startTime
+  var endTimeVal = req.body.endTime
+  var totalVolumeVal = req.body.totalVolume
+  console.log("");
+  console.log("-------------------------")
   console.log("New Usage Event logged!")
   console.log(idVal)
   console.log(startTimeVal)
   console.log(endTimeVal)
   console.log(totalVolumeVal)
+  console.log(date.getUTCDate())
+  res.send("New usage event logged");
   /*
   MongoClient.connect(dburl, function(err, db) {
     if (err) return
@@ -33,32 +45,38 @@ app.get('/api/usageEvent', function(req, res){
 })
 
 
-app.get('/api/newUser', function(req, res){
-  var firstName = req.param('firstName');
-  var lastName = req.param('lastName');
-  var streetAddress = req.param('streetAddress');
-  var city = req.param('city');
-  var state = req.param('state');
-  var email = req.param('email');
-  var password = req.param('password')
+app.post('/api/newUser', function(req, res){
+  res.send("You sent a new user to express")
+  var firstName = req.body.firstName;
+  var lastName = req.body.lastName;
+  var streetAddress = req.body.streetAddress;
+  var city = req.body.city;
+  var state = req.body.state;
+  var email = req.body.email;
+  var password = req.body.password
+
+  console.log("");
+  console.log("-------------------------")
   console.log("New user registered");
   console.log(firstName);
   console.log(lastName);
   console.log(city);
   console.log(state);
   console.log(email);
-  console.log(password);
-})
+  console.log(password)
+  console.log(date.getUTCDate())
+  res.send("You just registered a new user named " + firstName + " " + lastName)
+});
 
 
-MongoClient.connect(dburl, function(err, db) {
-  if (err) return
 
-  var collection = db.collection('foods')
-  collection.insert({name: 'taco', tasty: true}, function(err, result) {
-    collection.find({name: 'taco'}).toArray(function(err, docs) {
-      console.log(docs[0])
-      db.close()
-    })
-  })
-})
+app.post('/api/login', function(req, res){
+  var email = req.param('email')
+  var password = req.param('password')
+  console.log("");
+  console.log("-------------------------")
+  console.log("The user @ " + email + " attempted to log in")
+  console.log(date.getUTCDate())
+  res.send("You attempted to login with email: " + email + " and password: " + password)
+  //todo: actual things
+});
