@@ -2,6 +2,7 @@ var express = require('express')
 var app = express()
 var port = 3000
 var bodyParser = require('body-parser');
+var date = new Date();
 app.use( bodyParser.json() );
 app.use(bodyParser.urlencoded({
   extended: true
@@ -26,6 +27,8 @@ app.post('/api/usageEvent', function(req, res){
   console.log(startTimeVal)
   console.log(endTimeVal)
   console.log(totalVolumeVal)
+  console.log(date.getUTCDate())
+  res.send("New usage event logged");
   /*
   MongoClient.connect(dburl, function(err, db) {
     if (err) return
@@ -51,6 +54,9 @@ app.post('/api/newUser', function(req, res){
   var state = req.body.state;
   var email = req.body.email;
   var password = req.body.password
+
+  console.log("");
+  console.log("-------------------------")
   console.log("New user registered");
   console.log(firstName);
   console.log(lastName);
@@ -58,6 +64,8 @@ app.post('/api/newUser', function(req, res){
   console.log(state);
   console.log(email);
   console.log(password)
+  console.log(date.getUTCDate())
+  res.send("You just registered a new user named " + firstName + " " + lastName)
 });
 
 
@@ -65,7 +73,10 @@ app.post('/api/newUser', function(req, res){
 app.post('/api/login', function(req, res){
   var email = req.param('email')
   var password = req.param('password')
+  console.log("");
+  console.log("-------------------------")
   console.log("The user @ " + email + " attempted to log in")
-  res.send("You attempted to login")
+  console.log(date.getUTCDate())
+  res.send("You attempted to login with email: " + email + " and password: " + password)
   //todo: actual things
 });
