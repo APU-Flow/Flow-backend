@@ -3,11 +3,13 @@ var app = express()
 var port = 3000
 var bodyParser = require('body-parser');
 var date = new Date();
+var ulr = "mongodb://localhost:27017/flow";
+var MongoClient = require('mongodb').MongoClient
+var assert = require('assert');
 app.use( bodyParser.json() );
 app.use(bodyParser.urlencoded({
   extended: true
 }));
-
 
 app.listen(port);
 
@@ -21,13 +23,16 @@ app.post('/api/usageEvent', function(req, res){
   var endTimeVal = req.body.endTime
   var totalVolumeVal = req.body.totalVolume
   console.log("");
+  console.log("");
+  console.log("");
+  console.log("");
   console.log("-------------------------")
   console.log("New Usage Event logged!")
   console.log(idVal)
   console.log(startTimeVal)
   console.log(endTimeVal)
   console.log(totalVolumeVal)
-  console.log(date.getUTCDate())
+  console.log(new Date())
   res.send("New usage event logged");
   /*
   MongoClient.connect(dburl, function(err, db) {
@@ -56,6 +61,9 @@ app.post('/api/newUser', function(req, res){
   var password = req.body.password
 
   console.log("");
+  console.log("");
+  console.log("");
+  console.log("");
   console.log("-------------------------")
   console.log("New user registered");
   console.log(firstName);
@@ -64,7 +72,7 @@ app.post('/api/newUser', function(req, res){
   console.log(state);
   console.log(email);
   console.log(password)
-  console.log(date.getUTCDate())
+  console.log(new Date())
   res.send("You just registered a new user named " + firstName + " " + lastName)
 });
 
@@ -74,9 +82,12 @@ app.post('/api/login', function(req, res){
   var email = req.param('email')
   var password = req.param('password')
   console.log("");
+  console.log("");
+  console.log("");
+  console.log("");
   console.log("-------------------------")
   console.log("The user @ " + email + " attempted to log in")
-  console.log(date.getUTCDate())
+  console.log(new Date())
   res.send("You attempted to login with email: " + email + " and password: " + password)
   //todo: actual things
 });
