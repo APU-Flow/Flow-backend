@@ -60,6 +60,13 @@ app.post('/api/newUser', function(req, res){
   var email = req.body.email;
   var password = req.body.password
 
+  MongoClient.connect(url, function(err, db){
+    assert.equal(null, err);
+    insertUser(db, function(){
+      db.close();
+    });
+  });
+
   console.log("");
   console.log("");
   console.log("");
@@ -91,3 +98,20 @@ app.post('/api/login', function(req, res){
   res.send("You attempted to login with email: " + email + " and password: " + password)
   //todo: actual things
 });
+
+
+var insertUser = function(db, callback, firstName, lastName, streetAddress, city, state, email, password){
+  db.collection('users').insertOne({
+    "firstName": firstName,
+    "lastName": lastName,
+    "streetAddress": streetAddress,
+    "city": city,
+    "state": state,
+    "email": email,
+    "password": password
+  }, function(err, result) {
+    assert.equal(err, null);
+    console.log("Inserted user into db");
+    callback();
+  })
+}
