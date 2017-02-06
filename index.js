@@ -3,7 +3,7 @@ var app = express()
 var port = 3000
 var bodyParser = require('body-parser');
 var date = new Date();
-var ulr = "mongodb://localhost:27017/flow";
+var url = "mongodb://localhost:27017/flow";
 var MongoClient = require('mongodb').MongoClient
 var assert = require('assert');
 app.use( bodyParser.json() );
