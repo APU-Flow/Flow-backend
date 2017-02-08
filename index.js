@@ -86,16 +86,23 @@ app.post('/api/newUser', function(req, res){
 
 
 app.post('/api/login', function(req, res){
-  var email = req.param('email')
-  var password = req.param('password')
+  var emailVal = req.param('email')
+  var passwordVal = req.param('password')
   console.log("");
   console.log("");
   console.log("");
   console.log("");
   console.log("-------------------------")
-  console.log("The user @ " + email + " attempted to log in")
+  console.log("The user @ " + emailVal + " attempted to log in")
   console.log(new Date())
-  res.send("You attempted to login with email: " + email + " and password: " + password)
+  res.send("You attempted to login with email: " + emailVal + " and password: " + passwordVal)
+
+  MongoClient.connect(url, function(err, db){
+    assert.equal(null, err);
+    db.collection('users').find({email: emailVal}).toArray(function (err, result){
+      console.log("found:", result[0])
+    })
+  });
   //todo: actual things
 });
 
