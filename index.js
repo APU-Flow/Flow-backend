@@ -62,9 +62,9 @@ app.post('/api/newUser', function(req, res){
 
   MongoClient.connect(url, function(err, db){
     assert.equal(null, err);
-    insertUser(db, function(){
-      db.close();
-    });
+    insertUser(db, function(){db.close()},
+      firstName, lastName, streetAddress, city, state, email, password
+    );
   });
 
   console.log("");
