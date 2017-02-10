@@ -86,6 +86,7 @@ app.post('/api/newUser', function(req, res){
 
 
 app.post('/api/login', function(req, res){
+  res.setHeader('Content-Type', 'application/json');
   var emailVal = req.param('email')
   var passwordVal = req.param('password')
   console.log("");
@@ -95,7 +96,7 @@ app.post('/api/login', function(req, res){
   console.log("-------------------------")
   console.log("The user @ " + emailVal + " attempted to log in")
   console.log(new Date())
-  res.send("You attempted to login with email: " + emailVal + " and password: " + passwordVal)
+  //res.send("You attempted to login with email: " + emailVal + " and password: " + passwordVal)
 
   MongoClient.connect(url, function(err, db){
     assert.equal(null, err);
