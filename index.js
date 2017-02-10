@@ -58,7 +58,21 @@ app.post('/api/newUser', function(req, res){
   var city = req.body.city;
   var state = req.body.state;
   var email = req.body.email;
-  var password = req.body.password
+  var password = req.body.password;
+
+  console.log("");
+  console.log("");
+  console.log("");
+  console.log("");
+  console.log("-------------------------");
+  console.log("New user registered");
+  console.log(firstName);
+  console.log(lastName);
+  console.log(city);
+  console.log(state);
+  console.log(email);
+  console.log(password)
+  console.log(new Date());
 
   MongoClient.connect(url, function(err, db){
     assert.equal(null, err);
@@ -67,19 +81,7 @@ app.post('/api/newUser', function(req, res){
     );
   });
 
-  console.log("");
-  console.log("");
-  console.log("");
-  console.log("");
-  console.log("-------------------------")
-  console.log("New user registered");
-  console.log(firstName);
-  console.log(lastName);
-  console.log(city);
-  console.log(state);
-  console.log(email);
-  console.log(password)
-  console.log(new Date())
+
   res.send("You just registered a new user named " + firstName + " " + lastName)
 });
 
