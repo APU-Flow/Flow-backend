@@ -1,7 +1,13 @@
+var _ = require("lodash"):
 var express = require('express')
 var app = express()
 var port = 3000
 var bodyParser = require('body-parser');
+var jwt = require('jsonwebtoken');
+var passport = require('passport');
+var passportJWT = require('passport-jwt')
+var ExtractJWT = passportJWT.ExtractJwt;
+var JwtStrategy = passportJWT.Strategy;
 var date = new Date();
 var url = "mongodb://localhost:27017/flow";
 var MongoClient = require('mongodb').MongoClient
@@ -11,7 +17,24 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 
+var jwtOptions = {}
+jwtOptions.jwtFromRequest = ExtractJwt.fromAuthHeader();
+jwtOptions.secretOrKey = 'tasmanianDevil';
+
+var strategy = new JwtStrategy(jwtOptions, function(jwt_payload, next) {
+  console.log('payload received', jwt_payload);
+  // usually this would be a database call:
+  var user = users[_.findIndex(users, {id: jwt_payload.id})];
+  if (user) {
+    next(null, user);
+  } else {
+    next(null, false);
+  }
+});
+
+passport.use(strategy);
 app.listen(port);
+
 
 //here are some routes
 app.post('/api/usageEvent', function(req, res){
@@ -106,6 +129,11 @@ app.post('/api/login', function(req, res){
       jsonBody = result[0]
       if(passwordVal == jsonBody["password"]){
         res.send(jsonBody)
+        var payload = {id: user.id};
+        var token = jwt.sign(payload, jwtOptions.secretOrKey);
+        res.json({message: "ok", token: token});
+      } else {
+        res.send("Your password is incorrect, fool.");
       }
       console.log("found in database:", result)
     })
