@@ -48,8 +48,7 @@ app.listen(port);
 // get an instance of the router for api routes
 var apiRoutes = express.Router();
 
-// route to authenticate a user (POST http://localhost:8080/api/authenticate)
-...
+
 // route middleware to verify a token
 apiRoutes.use(function(req, res, next) {
   // check header or url parameters or post parameters for token
