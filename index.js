@@ -1,4 +1,4 @@
-var _ = require("lodash"):
+var _ = require("lodash")
 var express = require('express')
 var app = express()
 var port = 3000
@@ -18,13 +18,21 @@ app.use(bodyParser.urlencoded({
 }));
 
 var jwtOptions = {}
-jwtOptions.jwtFromRequest = ExtractJwt.fromAuthHeader();
+jwtOptions.jwtFromRequest = ExtractJWT.fromAuthHeader();
 jwtOptions.secretOrKey = 'tasmanianDevil';
 
 var strategy = new JwtStrategy(jwtOptions, function(jwt_payload, next) {
   console.log('payload received', jwt_payload);
   // usually this would be a database call:
-  var user = users[_.findIndex(users, {id: jwt_payload.id})];
+  var user =  "";
+  
+  MongoClient.connect(url, function(err, db){
+    assert.equal(null, err);
+    db.collection('users').find({_id: jwt_payload.id}).toArray(function (err, result){
+      user = result[0]
+    })
+  });
+
   if (user) {
     next(null, user);
   } else {
@@ -128,8 +136,8 @@ app.post('/api/login', function(req, res){
     db.collection('users').find({email: emailVal}).toArray(function (err, result){
       jsonBody = result[0]
       if(passwordVal == jsonBody["password"]){
-        res.send(jsonBody)
-        var payload = {id: user.id};
+       // res.send(jsonBody)
+        var payload = {id: jsonBody.id};
         var token = jwt.sign(payload, jwtOptions.secretOrKey);
         res.json({message: "ok", token: token});
       } else {
