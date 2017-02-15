@@ -82,7 +82,6 @@ app.post('/api/usageEvent', function(req, res){
 
 
 app.post('/api/newUser', function(req, res){
-  res.send("You sent a new user to express")
   var firstName = req.body.firstName;
   var lastName = req.body.lastName;
   var streetAddress = req.body.streetAddress;
