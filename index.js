@@ -25,7 +25,7 @@ var strategy = new JwtStrategy(jwtOptions, function(jwt_payload, next) {
   console.log('payload received', jwt_payload);
   // usually this would be a database call:
   var user =  "";
-  
+
   MongoClient.connect(url, function(err, db){
     assert.equal(null, err);
     db.collection('users').find({_id: jwt_payload.id}).toArray(function (err, result){
@@ -113,7 +113,7 @@ app.post('/api/newUser', function(req, res){
   });
 
 
-  res.send("You just registered a new user named " + firstName + " " + lastName)
+  res.json({status: "okay", userEmail: email});
 });
 
 
