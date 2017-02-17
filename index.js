@@ -99,7 +99,7 @@ app.post('/login', function(req, res){
        // res.send(jsonBody)
         var payload = {id: jsonBody.id};
         var token = jwt.sign(payload, jwtOptions.secretOrKey);
-        res.json({message: "ok", token: token});
+        res.json({message: "ok", token: token, email: emailVal});
       } else {
         res.json("Your password is incorrect, fool.");
       }
@@ -183,6 +183,18 @@ app.post('/api/usageEvent', function(req, res){
   */
 })
 
+
+
+app.post('/getUsageEvent'){
+  emailVal = req.body.email;
+  MongoClient.connect(url, function(err, db){
+    assert.equal(null, err);
+    db.collection('events').find({email: emailVal}).toArray(function (err, result){
+      jsonBody = result[0]
+      res.send(jsonBody);
+    })
+  });
+}
 
 
 
