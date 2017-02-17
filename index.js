@@ -185,7 +185,7 @@ app.post('/api/usageEvent', function(req, res){
 
 
 
-app.post('/getUsageEvent'){
+app.post('/getUsageEvent', function(req, res){
   emailVal = req.body.email;
   MongoClient.connect(url, function(err, db){
     assert.equal(null, err);
@@ -194,7 +194,7 @@ app.post('/getUsageEvent'){
       res.send(jsonBody);
     })
   });
-}
+});
 
 
 
