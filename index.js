@@ -185,8 +185,13 @@ app.post('/api/usageEvent', function(req, res){
 
 
 
-app.post('/getUsageEvent', function(req, res){
-  emailVal = req.body.email;
+app.get('/getUsageEvent', function(req, res){
+  emailVal = req.param("email");
+  console.log("")
+  console.log("")
+  console.log("")
+  console.log("____________________")
+  console.log("Usage event for " + emailVal + "pulled");
   MongoClient.connect(url, function(err, db){
     assert.equal(null, err);
     db.collection('events').find({email: emailVal}).toArray(function (err, result){
