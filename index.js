@@ -199,7 +199,7 @@ app.get('/api/getUsageEvent'){
       res.send(jsonBody);
     })
   });
-}
+});
 
 
 
