@@ -16,10 +16,10 @@ app.use( bodyParser.json() );
 app.use(bodyParser.urlencoded({
   extended: true
 }));
-
+]
+app.set('superSecret', 'bruh'); // secret variable
 var jwtOptions = {}
 jwtOptions.jwtFromRequest = ExtractJWT.fromAuthHeader();
-jwtOptions.secretOrKey = 'tasmanianDevil';
 
 var strategy = new JwtStrategy(jwtOptions, function(jwt_payload, next) {
   console.log('payload received', jwt_payload);
@@ -101,7 +101,7 @@ app.post('/login', function(req, res){
         var token = jwt.sign(payload, jwtOptions.secretOrKey);
         res.json({message: "ok", token: token, email: emailVal});
       } else {
-        res.json("Your password is incorrect, fool.");
+        res.json({message: "lol nice tri n00b");
       }
       console.log("found in database:", result)
     })
@@ -185,7 +185,7 @@ app.post('/api/usageEvent', function(req, res){
 
 
 
-app.get('/getUsageEvent'){
+app.get('/api/getUsageEvent'){
   emailVal = req.param("email");
   console.log("")
   console.log("")
