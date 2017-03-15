@@ -1,81 +1,25 @@
-var _ = require("lodash")
-var express = require('express')
-var app = express()
-var port = 3000
+var _ = require("lodash");
+var express = require('express');
+var app = express();
+var port = 3000;
 var bodyParser = require('body-parser');
 var jwt = require('jsonwebtoken');
 var passport = require('passport');
-var passportJWT = require('passport-jwt')
+var passportJWT = require('passport-jwt');
 var ExtractJWT = passportJWT.ExtractJwt;
 var JwtStrategy = passportJWT.Strategy;
 var date = new Date();
 var url = "mongodb://localhost:27017/flow";
-var MongoClient = require('mongodb').MongoClient
+var MongoClient = require('mongodb').MongoClient;
 var assert = require('assert');
 app.use( bodyParser.json() );
 app.use(bodyParser.urlencoded({
   extended: true
 }));
-
-app.set('superSecret', 'bruh'); // secret variable
-var jwtOptions = {}
-jwtOptions.jwtFromRequest = ExtractJWT.fromAuthHeader();
-
-var strategy = new JwtStrategy(jwtOptions, function(jwt_payload, next) {
-  console.log('payload received', jwt_payload);
-  // usually this would be a database call:
-  var user =  "";
-
-  MongoClient.connect(url, function(err, db){
-    assert.equal(null, err);
-    db.collection('users').find({_id: jwt_payload.id}).toArray(function (err, result){
-      user = result[0]
-    })
-  });
-
-  if (user) {
-    next(null, user);
-  } else {
-    next(null, false);
-  }
-});
-
-passport.use(strategy);
 app.listen(port);
-
-
 
 // get an instance of the router for api routes
 var apiRoutes = express.Router();
-
-
-// route middleware to verify a token
-apiRoutes.use(function(req, res, next) {
-  // check header or url parameters or post parameters for token
-  var token = req.body.token || req.query.token || req.headers['x-access-token'];
-  // decode token
-  if (token) {
-    // verifies secret and checks exp
-    jwt.verify(token, app.get('superSecret'), function(err, decoded) {
-      if (err) {
-        return res.json({ success: false, message: 'Failed to authenticate token.' });
-      } else {
-        // if everything is good, save to request for use in other routes
-        req.decoded = decoded;
-        next();
-      }
-    });
-  } else {
-    // if there is no token
-    // return an error
-    return res.status(403).send({
-        success: false,
-        message: 'No token provided.'
-    });
-
-  }
-});
-
 app.use('/api', apiRoutes);
 
 app.post('/login', function(req, res){
@@ -97,18 +41,14 @@ app.post('/login', function(req, res){
       jsonBody = result[0]
       if(passwordVal == jsonBody["password"]){
        // res.send(jsonBody)
-        var payload = {id: jsonBody.id};
-        var token = jwt.sign(payload, jwtOptions.secretOrKey);
-        res.json({message: "ok", token: token, email: emailVal});
+        res.json({message: "ok", email: emailVal});
       } else {
         res.json({message: "lol nice tri n00b"});
       }
       console.log("found in database:", result)
     })
   });
-  //todo: actual things
 });
-
 
 
 app.post('/newUser', function(req, res){
@@ -144,7 +84,6 @@ app.post('/newUser', function(req, res){
 
   res.json({status: "OK", userEmail: email});
 });
-
 
 
 //here are some protected routes
@@ -199,8 +138,6 @@ app.get('/api/getUsageEvent', function(req, res){
     })
   });
 });
-
-
 
 
 //HERE ARE SOME HELPER FUNCTIONS
