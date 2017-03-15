@@ -184,7 +184,6 @@ app.post('/api/usageEvent', function(req, res){
 })
 
 
-
 app.get('/api/getUsageEvent'){
   emailVal = req.param("email");
   console.log("")
