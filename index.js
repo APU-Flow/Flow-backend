@@ -16,7 +16,7 @@ app.use( bodyParser.json() );
 app.use(bodyParser.urlencoded({
   extended: true
 }));
-]
+
 app.set('superSecret', 'bruh'); // secret variable
 var jwtOptions = {}
 jwtOptions.jwtFromRequest = ExtractJWT.fromAuthHeader();
