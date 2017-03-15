@@ -76,7 +76,7 @@ apiRoutes.use(function(req, res, next) {
   }
 });
 
-app.use('/api', apiRoutes);
+//app.use('/api', apiRoutes);
 
 app.post('/login', function(req, res){
   res.setHeader('Content-Type', 'application/json');
