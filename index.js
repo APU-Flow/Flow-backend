@@ -101,7 +101,7 @@ app.post('/login', function(req, res){
         var token = jwt.sign(payload, jwtOptions.secretOrKey);
         res.json({message: "ok", token: token, email: emailVal});
       } else {
-        res.json({message: "lol nice tri n00b");
+        res.json({message: "lol nice tri n00b"});
       }
       console.log("found in database:", result)
     })
@@ -184,7 +184,7 @@ app.post('/api/usageEvent', function(req, res){
 })
 
 
-app.get('/api/getUsageEvent'){
+app.get('/api/getUsageEvent', function(req, res){
   emailVal = req.param("email");
   console.log("")
   console.log("")
