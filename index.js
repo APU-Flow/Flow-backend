@@ -16,7 +16,7 @@ app.use( bodyParser.json() );
 app.use(bodyParser.urlencoded({
   extended: true
 }));
-]
+
 app.set('superSecret', 'bruh'); // secret variable
 var jwtOptions = {}
 jwtOptions.jwtFromRequest = ExtractJWT.fromAuthHeader();
@@ -148,7 +148,7 @@ app.post('/newUser', function(req, res){
 
 
 //here are some protected routes
-app.post('/api/usageEvent', function(req, res){
+app.post('/api/logUsageEvent', function(req, res){
   console.log(req)
   res.send('You sent a usageEvent to Express')
 
@@ -156,6 +156,8 @@ app.post('/api/usageEvent', function(req, res){
   var startTimeVal = req.body.startTime
   var endTimeVal = req.body.endTime
   var totalVolumeVal = req.body.totalVolume
+  var meterId = req.body.meterId
+  var userEmail = req.body.userEmail
   console.log("");
   console.log("");
   console.log("");
@@ -165,7 +167,8 @@ app.post('/api/usageEvent', function(req, res){
   console.log(idVal)
   console.log(startTimeVal)
   console.log(endTimeVal)
-  console.log(totalVolumeVal)
+  console.log(meterId)
+  console.log(userEmail);
   console.log(new Date())
   res.send("New usage event logged");
   /*
@@ -185,7 +188,57 @@ app.post('/api/usageEvent', function(req, res){
 
 
 
-app.get('/api/getUsageEvent'){
+app.post('/api/addMeter', function(req, res){
+  console.log(req)
+  res.send('You sent a usageEvent to Express')
+  var numMeters = 0;
+
+  var meterName = req.body.meterName;
+  var userEmail = req.body.userEmail;
+  MongoClient.connect(url, function(err, db){
+    assert.equal(null, err);
+    db.collection('meters').find({email: emailVal}).toArray(function (err, result){
+    numMeters = result.length;
+  });
+
+  var meterId = numMeters + 1;
+
+  MongoClient.connect(url, function(err, db){
+    assert.equal(null, err);
+    insertMeter(db, function(){db.close()},
+      meterId, meterName, userEmail
+    );
+  });
+  console.log("");
+  console.log("");
+  console.log("");
+  console.log("");
+  console.log("-------------------------")
+  console.log("New Meter Added!")
+  console.log(meterId)
+  console.log(meterName)
+  console.log(endTimeVal)
+  console.log(userEmail)
+  console.log(new Date())
+  res.send("New Meter Added");
+  /*
+  MongoClient.connect(dburl, function(err, db) {
+    if (err) return
+
+    var collection = db.collection('flow')
+    collection.insert({id: idVal, startTime: startTimeVal, endTime: endTimeVal, totalVolume: totalVolumeVal}, function(err, result) {
+      collection.find({id: '1234'}).toArray(function(err, docs) {
+        console.log(docs[0])
+        db.close()
+      })
+    })
+  })
+  */
+})
+
+
+
+app.get('/api/getUsageEvent', function(req, res){
   emailVal = req.param("email");
   console.log("")
   console.log("")
@@ -217,6 +270,19 @@ var insertUser = function(db, callback, firstName, lastName, streetAddress, city
   }, function(err, result) {
     assert.equal(err, null);
     console.log("Inserted user into db");
+    callback();
+  })
+}
+
+
+var insertMeter = function(db, callback, meterId, meterName, userEmail){
+  db.collection('meters').insertOne({
+    "meterId": meterId,
+    "meterName": meterName,
+    "userEmail": userEmail
+  }, function(err, result) {
+    assert.equal(err, null);
+    console.log("Inserted meter into db");
     callback();
   })
 }
