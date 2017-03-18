@@ -65,7 +65,7 @@ app.post('/login', function(req, res){
       // If our user is authenticated successfully:
       if (passwordVal == jsonBody["password"]){
         
-        let token = jwt.sign(user, app.get('uberSecret'), {
+        let token = jwt.sign(jsonBody, app.get('uberSecret'), {
           expiresInMinutes: 1440 // Expires in 24 hours
         });
 
