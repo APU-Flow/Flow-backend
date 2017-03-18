@@ -27,20 +27,20 @@ apiRoutes.use(function(req, res, next) {
 
   if (token) {
     // Verify the secret and check the expiry
-    jwt.verify(token, app.get('uberSecret'), function(err, decoded) {      
+    jwt.verify(token, app.get('uberSecret'), function(err, decoded) {
       if (err) {
-        return res.json({ success: false, message: 'Failed to authenticate token.' });    
+        return res.json({ success: false, message: 'Failed to authenticate token.' });
       } else {
         // If everything is good, save the decoded token to the request for use in other routes
-        req.decoded = decoded;    
+        req.decoded = decoded;
         next();
       }
     });
   } else {
     // If there is no token, return an error
-    return res.status(403).send({ 
-        success: false, 
-        message: 'No token provided.' 
+    return res.status(403).send({
+        success: false,
+        message: 'No token provided.'
     });
   }
 });
@@ -64,9 +64,9 @@ app.post('/login', function(req, res){
       jsonBody = result[0]
       // If our user is authenticated successfully:
       if (passwordVal == jsonBody["password"]){
-        
+
         let token = jwt.sign(jsonBody, app.get('uberSecret'), {
-          expiresInMinutes: 1440 // Expires in 24 hours
+          expiresIn: "1d"
         });
 
         res.json({
