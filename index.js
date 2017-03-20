@@ -1,35 +1,36 @@
-let _ = require("lodash");
+'use strict';
+// index.js
+// Flow Backend server
 let express = require('express');
 let app = express();
 let port = 3000;
 let MongoClient = require('mongodb').MongoClient;
 let assert = require('assert');
-
 let bodyParser = require('body-parser');
 let jwt = require('jsonwebtoken');
-
-let config = require('./config'); // Get our config file
-app.set('uberSecret', config.secret);
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+let config = require('./config');     // Get our config file
+app.set('uberSecret', config.secret); // Set the secret value used for JWTs
 
-// get an instance of the router for api routes
+// Configure a special Router for /api/ routes with middleware for JWT auth
 let apiRoutes = express.Router();
 app.use('/api', apiRoutes);
-
-// Route middleware to verify a token
 apiRoutes.use(function(req, res, next) {
 
   // Check header, url parameters, and post parameters for token
-  var token = req.body.token || req.query.token || req.headers['x-access-token'];
+  let token = req.body.token || req.query.token || req.headers['x-access-token'];
 
   if (token) {
     // Verify the secret and check the expiry
     jwt.verify(token, app.get('uberSecret'), function(err, decoded) {
       if (err) {
-        return res.json({ success: false, message: 'Failed to authenticate token.' });
+        return res.json({
+          success: false,
+          message: 'Failed to authenticate token.'
+        });
       } else {
         // If everything is good, save the decoded token to the request for use in other routes
         req.decoded = decoded;
@@ -39,155 +40,146 @@ apiRoutes.use(function(req, res, next) {
   } else {
     // If there is no token, return an error
     return res.status(403).send({
-        success: false,
-        message: 'No token provided.'
+      success: false,
+      message: 'No token provided.'
     });
   }
 });
 
-app.post('/login', function(req, res){
+
+//-----
+// Main app routes (on '/')
+//-----
+
+app.post('/login', function(req, res) {
   res.setHeader('Content-Type', 'application/json');
-  let emailVal = req.param('email')
-  let passwordVal = req.param('password')
-  console.log("");
-  console.log("");
-  console.log("");
-  console.log("");
-  console.log("-------------------------")
-  console.log("The user @ " + emailVal + " attempted to log in")
-  console.log(new Date())
-  //res.send("You attempted to login with email: " + emailVal + " and password: " + passwordVal)
 
-  MongoClient.connect(config.database, function(err, db){
-    assert.equal(null, err);
-    db.collection('users').find({email: emailVal}).toArray(function (err, result){
-      jsonBody = result[0]
-      // If our user is authenticated successfully:
-      if (passwordVal == jsonBody["password"]){
+  // Destructure login info from request body into individual variables
+  let {email, password} = req.body;
 
-        let token = jwt.sign(jsonBody, app.get('uberSecret'), {
-          expiresIn: "1d"
-        });
+  console.log('\n\n-------------------------');
+  console.log(`The user ${email} attempted to log in`);
+  console.log(new Date());
 
-        res.json({
-          message: "ok",
-          firstName: jsonBody["firstName"],
-          token
-        });
-      } else {
-        res.json({message: "lol nice tri n00b"});
-      }
-      console.log("found in database:", result)
-    })
-  });
+  try {
+    MongoClient.connect(config.database, function(err, db) {
+      assert.equal(null, err);
+      db.collection('users').find({ email }).toArray(function (err, result) {
+        // The user which matches should be the only item in the result toArray
+        // TODO: Handle multiple matches well! Right now it only grabs the first and ignores others.
+        let userObject = result[0];
+
+        // If our user is authenticated successfully, generate a token and respond with it
+        // TODO: Secure the password value, at least hashing it or something!
+        if (password === userObject.password) {
+          let token = jwt.sign(userObject, app.get('uberSecret'), {
+            expiresIn: '1d'
+          });
+
+          res.json({
+            message: 'ok',
+            firstName: userObject.firstName,
+            token
+          });
+        } else {
+          throw 'Password does not match.';
+        }
+        console.log('Found in database:', result);
+      });
+    });
+  } catch (e) {
+    // If the authentication fails, respond with an appropriate message
+    res.json({ message: 'lol nice tri n00b' });
+  }
 });
 
+app.post('/newUser', function(req, res) {
+  // Destructure new user fields from request body into individual variables
+  let {firstName, lastName, streetAddress, city, state, email, password} = req.body;
 
-app.post('/newUser', function(req, res){
-  let firstName = req.body.firstName;
-  let lastName = req.body.lastName;
-  let streetAddress = req.body.streetAddress;
-  let city = req.body.city;
-  let state = req.body.state;
-  let email = req.body.email;
-  let password = req.body.password;
-
-  console.log("");
-  console.log("");
-  console.log("");
-  console.log("");
-  console.log("-------------------------");
-  console.log("New user registered");
+  console.log('\n\n-------------------------');
+  console.log('New user registered');
   console.log(firstName);
   console.log(lastName);
   console.log(city);
   console.log(state);
   console.log(email);
-  console.log(password)
+  console.log(password);
   console.log(new Date());
 
-  MongoClient.connect(config.database, function(err, db){
+  MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
-    insertUser(db, function(){db.close()},
-      firstName, lastName, streetAddress, city, state, email, password
-    );
+    // Add a new user object to the database using the data from the request
+    db.collection('users').insertOne({
+      firstName,
+      lastName,
+      streetAddress,
+      city,
+      state,
+      email,
+      password
+    }, function(err, result) {
+      assert.equal(err, null);
+      console.log('Inserted user into db');
+      db.close();
+    });
   });
 
-
-  res.json({status: "OK", userEmail: email});
+  res.json({ status: 'ok', userEmail: email });
 });
 
 
-//here are some protected routes
-apiRoutes.post('/usageEvent', function(req, res){
-  console.log(req)
-  res.send('You sent a usageEvent to Express')
+//-----
+// Protected API Routes (on '/api/')
+//-----
 
-  let idVal = req.body.id;
-  let startTimeVal = req.body.startTime
-  let endTimeVal = req.body.endTime
-  let totalVolumeVal = req.body.totalVolume
-  console.log("");
-  console.log("");
-  console.log("");
-  console.log("");
-  console.log("-------------------------")
-  console.log("New Usage Event logged!")
-  console.log(idVal)
-  console.log(startTimeVal)
-  console.log(endTimeVal)
-  console.log(totalVolumeVal)
-  console.log(new Date())
-  res.send("New usage event logged");
+apiRoutes.post('/usageEvent', function(req, res) {
+  console.log(req);
+
+  // Destructure new usage event fields from request body into individual variables
+  let {id, startTime, endTime, totalVolume} = req.body;
+  
+  console.log('\n\n-------------------------');
+  console.log('New Usage Event logged!');
+  console.log(id);
+  console.log(startTime);
+  console.log(endTime);
+  console.log(totalVolume);
+  console.log(new Date());
+  res.send('New usage event logged');
   /*
   MongoClient.connect(config.database, function(err, db) {
-    if (err) return
-
-    let collection = db.collection('flow')
-    collection.insert({id: idVal, startTime: startTimeVal, endTime: endTimeVal, totalVolume: totalVolumeVal}, function(err, result) {
-      collection.find({id: '1234'}).toArray(function(err, docs) {
-        console.log(docs[0])
-        db.close()
-      })
-    })
-  })
-  */
-})
-
-
-apiRoutes.get('/getUsageEvent', function(req, res){
-  emailVal = req.param("email");
-  console.log("")
-  console.log("")
-  console.log("")
-  console.log("____________________")
-  console.log("Usage event for " + emailVal + "pulled");
-  MongoClient.connect(config.database, function(err, db){
     assert.equal(null, err);
-    db.collection('events').find({email: emailVal}).toArray(function (err, result){
-      jsonBody = result[0]
-      res.send(jsonBody);
-    })
+
+    let collection = db.collection('flow');
+    collection.insert({ id, startTime, endTime, totalVolume }, function(err, result) {
+      collection.find({ id: '1234' }).toArray(function(err, docs) {
+        console.log(docs[0]);
+        db.close();
+      });
+    });
+  });
+  */
+});
+
+apiRoutes.get('/getUsageEvent', function(req, res) {
+  let email = req.param('email');
+
+  console.log('\n\n-------------------------');
+  console.log(`Usage event for ${email} pulled`);
+
+  MongoClient.connect(config.database, function(err, db) {
+    assert.equal(null, err);
+    db.collection('events').find({ email }).toArray(function(err, result) {
+      res.send(result[0]);
+    });
   });
 });
 
 
-//HERE ARE SOME HELPER FUNCTIONS
-let insertUser = function(db, callback, firstName, lastName, streetAddress, city, state, email, password){
-  db.collection('users').insertOne({
-    "firstName": firstName,
-    "lastName": lastName,
-    "streetAddress": streetAddress,
-    "city": city,
-    "state": state,
-    "email": email,
-    "password": password
-  }, function(err, result) {
-    assert.equal(err, null);
-    console.log("Inserted user into db");
-    callback();
-  })
-}
+//-----
+// Fire up the server!
+//-----
 
 app.listen(port);
 console.log(`Flow-backend server running on port ${port}`);
