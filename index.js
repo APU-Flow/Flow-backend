@@ -12,6 +12,8 @@ var date = new Date();
 var url = "mongodb://localhost:27017/flow";
 var MongoClient = require('mongodb').MongoClient
 var assert = require('assert');
+var bcrypt  = require('bcrypt');
+const saltRounfs = 10;
 app.use( bodyParser.json() );
 app.use(bodyParser.urlencoded({
   extended: true
@@ -95,18 +97,18 @@ app.post('/login', function(req, res){
     assert.equal(null, err);
     db.collection('users').find({email: emailVal}).toArray(function (err, result){
       jsonBody = result[0]
-      if(passwordVal == jsonBody["password"]){
-       // res.send(jsonBody)
-        var payload = {id: jsonBody.id};
-        var token = jwt.sign(payload, jwtOptions.secretOrKey);
-        res.json({message: "ok", token: token, email: emailVal});
-      } else {
-        res.json({message: "lol nice tri n00b");
-      }
-      console.log("found in database:", result)
-    })
+      bcrypt.compare(passwordVal, jsonBody["password"], function(err, res){
+        if(res == true){
+          var payload = {id: jsonBody.id};
+          var token = jwt.sign(payload, jwtOptions.secretOrKey);
+          res.json({message: "ok", token: token, email: emailVal});
+        } else {
+          res.json({message: "lol nice tri n00b"});
+        }
+        console.log("found in database:", result)
+      });
+    });
   });
-  //todo: actual things
 });
 
 
@@ -131,14 +133,18 @@ app.post('/newUser', function(req, res){
   console.log(city);
   console.log(state);
   console.log(email);
-  console.log(password)
   console.log(new Date());
 
-  MongoClient.connect(url, function(err, db){
-    assert.equal(null, err);
-    insertUser(db, function(){db.close()},
-      firstName, lastName, streetAddress, city, state, email, password
-    );
+
+  bcrypt.genSalt(saltRounds, function(err, salt){
+    bcyrpt.hash(password, salt, function(err, hash){
+      MongoClient.connect(url, function(err, db){
+        assert.equal(null, err);
+        insertUser(db, function(){db.close()},
+          firstName, lastName, streetAddress, city, state, email, hash
+        );
+      });
+    });
   });
 
 
