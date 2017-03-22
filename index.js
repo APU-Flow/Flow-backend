@@ -13,7 +13,7 @@ var url = "mongodb://localhost:27017/flow";
 var MongoClient = require('mongodb').MongoClient
 var assert = require('assert');
 var bcrypt  = require('bcrypt');
-const saltRounfs = 10;
+const saltRounds = 10;
 app.use( bodyParser.json() );
 app.use(bodyParser.urlencoded({
   extended: true
@@ -290,5 +290,5 @@ var insertMeter = function(db, callback, meterId, meterName, userEmail){
     assert.equal(err, null);
     console.log("Inserted meter into db");
     callback();
-  })
-}
+  });
+};
