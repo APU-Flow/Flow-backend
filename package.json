@@ -17,5 +17,8 @@
     "mongodb": "^2.2.25",
     "passport": "^0.3.2",
     "passport-jwt": "^2.2.1"
+  },
+  "devDependencies": {
+    "eslint": "^3.18.0"
   }
 }

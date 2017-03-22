@@ -71,7 +71,7 @@ app.post('/login', function(req, res) {
         let userObject = result[0];
 
         // If our user is authenticated successfully, generate a token and respond with it
-        bcrypt.compare(passwordVal, jsonBody["password"], function(err, compResult){
+        bcrypt.compare(password, userObject.password, function(err, compResult){
           if (compResult === true) {
             let token = jwt.sign(userObject, app.get('uberSecret'), {
               expiresIn: '1d'
@@ -80,6 +80,7 @@ app.post('/login', function(req, res) {
             res.json({
               message: 'ok',
               firstName: userObject.firstName,
+              email: userObject.email,
               token
             });
           } else {
@@ -110,8 +111,8 @@ app.post('/newUser', function(req, res) {
 
 
   bcrypt.genSalt(saltRounds, function(err, salt){
-    bcyrpt.hash(password, salt, function(err, hash){
-      MongoClient.connect(url, function(err, db){
+    bcrypt.hash(password, salt, function(err, hash){
+      MongoClient.connect(config.database, function(err, db){
         assert.equal(null, err);
         db.collection('users').insertOne({
           firstName,
@@ -168,38 +169,38 @@ apiRoutes.post('/usageEvent', function(req, res) {
 });
 
 app.post('/api/addMeter', function(req, res){
-  console.log(req)
-  res.send('You sent a usageEvent to Express')
+  console.log(req);
+  res.send('You sent a usageEvent to Express');
   var numMeters = 0;
 
   var meterName = req.body.meterName;
   var userEmail = req.body.userEmail;
-  MongoClient.connect(url, function(err, db){
+  MongoClient.connect(config.database, function(err, db){
     assert.equal(null, err);
-    db.collection('meters').find({email: emailVal}).toArray(function (err, result){
-    numMeters = result.length;
+    db.collection('meters').find({email: userEmail}).toArray(function (err, result){
+      numMeters = result.length;
+    });
   });
 
   var meterId = numMeters + 1;
 
-  MongoClient.connect(url, function(err, db){
+  MongoClient.connect(config.database, function(err, db){
     assert.equal(null, err);
-    insertMeter(db, function(){db.close()},
+    insertMeter(db, function(){db.close();},
       meterId, meterName, userEmail
     );
   });
-  console.log("");
-  console.log("");
-  console.log("");
-  console.log("");
-  console.log("-------------------------")
-  console.log("New Meter Added!")
-  console.log(meterId)
-  console.log(meterName)
-  console.log(endTimeVal)
-  console.log(userEmail)
-  console.log(new Date())
-  res.send("New Meter Added");
+  console.log('');
+  console.log('');
+  console.log('');
+  console.log('');
+  console.log('-------------------------');
+  console.log('New Meter Added!');
+  console.log(meterId);
+  console.log(meterName);
+  console.log(userEmail);
+  console.log(new Date());
+  res.send('New Meter Added');
   /*
   MongoClient.connect(dburl, function(err, db) {
     if (err) return
@@ -238,12 +239,12 @@ console.log(`Flow-backend server running on port ${port}`);
 
 let insertMeter = function(db, callback, meterId, meterName, userEmail){
   db.collection('meters').insertOne({
-    "meterId": meterId,
-    "meterName": meterName,
-    "userEmail": userEmail
+    meterId,
+    meterName,
+    userEmail
   }, function(err, result) {
     assert.equal(err, null);
-    console.log("Inserted meter into db");
+    console.log('Inserted meter into db');
     callback();
   });
 };
