@@ -9,16 +9,11 @@
   "author": "Flow team",
   "license": "ISC",
   "dependencies": {
+    "assert": "^1.4.1",
     "bcrypt": "^1.0.2",
     "body-parser": "^1.16.0",
     "express": "^4.14.0",
-    "jwt-simple": "^0.5.1",
-    "lodash": "^4.17.4",
-    "mongodb": "^2.2.25",
-    "passport": "^0.3.2",
-    "passport-jwt": "^2.2.1"
-  },
-  "devDependencies": {
-    "eslint": "^3.18.0"
+    "jsonwebtoken": "^7.3.0",
+    "mongodb": "^2.2.25"
   }
 }
