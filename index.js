@@ -114,6 +114,7 @@ app.post('/newUser', function(req, res) {
     bcrypt.hash(password, salt, function(err, hash){
       MongoClient.connect(config.database, function(err, db){
         assert.equal(null, err);
+        console.log(hash);
         db.collection('users').insertOne({
           firstName,
           lastName,
