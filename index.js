@@ -109,7 +109,6 @@ app.post('/newUser', function(req, res) {
   console.log(email);
   console.log(new Date());
 
-
   bcrypt.genSalt(saltRounds, function(err, salt){
     bcrypt.hash(password, salt, function(err, hash){
       MongoClient.connect(config.database, function(err, db){
@@ -168,33 +167,36 @@ apiRoutes.post('/usageEvent', function(req, res) {
   */
 });
 
-app.post('/api/addMeter', function(req, res){
+app.post('/api/addMeter', function(req, res) {
   console.log(req);
   res.send('You sent a usageEvent to Express');
-  var numMeters = 0;
+  let numMeters = 0;
 
-  var meterName = req.body.meterName;
-  var userEmail = req.body.userEmail;
-  MongoClient.connect(config.database, function(err, db){
+  let meterName = req.body.meterName;
+  let userEmail = req.body.userEmail;
+  MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
-    db.collection('meters').find({email: userEmail}).toArray(function (err, result){
+    db.collection('meters').find({email: userEmail}).toArray(function (err, result) {
       numMeters = result.length;
     });
   });
 
-  var meterId = numMeters + 1;
+  let meterId = numMeters + 1;
 
-  MongoClient.connect(config.database, function(err, db){
+  MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
-    insertMeter(db, function(){db.close();},
-      meterId, meterName, userEmail
-    );
+    db.collection('meters').insertOne({
+      meterId,
+      meterName,
+      userEmail
+    }, function(err, result) {
+      assert.equal(err, null);
+      console.log('Inserted meter into db');
+      db.close();
+    });
   });
-  console.log('');
-  console.log('');
-  console.log('');
-  console.log('');
-  console.log('-------------------------');
+
+  console.log('\n\n-------------------------');
   console.log('New Meter Added!');
   console.log(meterId);
   console.log(meterName);
@@ -205,7 +207,7 @@ app.post('/api/addMeter', function(req, res){
   MongoClient.connect(dburl, function(err, db) {
     if (err) return
 
-    var collection = db.collection('flow')
+    let collection = db.collection('flow')
     collection.insert({id: idVal, startTime: startTimeVal, endTime: endTimeVal, totalVolume: totalVolumeVal}, function(err, result) {
       collection.find({id: '1234'}).toArray(function(err, docs) {
         console.log(docs[0])
@@ -236,15 +238,3 @@ apiRoutes.get('/getUsageEvent', function(req, res) {
 //-----
 app.listen(port);
 console.log(`Flow-backend server running on port ${port}`);
-
-let insertMeter = function(db, callback, meterId, meterName, userEmail){
-  db.collection('meters').insertOne({
-    meterId,
-    meterName,
-    userEmail
-  }, function(err, result) {
-    assert.equal(err, null);
-    console.log('Inserted meter into db');
-    callback();
-  });
-};
