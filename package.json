@@ -7,6 +7,10 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Flow team",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/APU-Flow/Flow-backend.git"
+  },
   "license": "ISC",
   "dependencies": {
     "assert": "^1.4.1",
