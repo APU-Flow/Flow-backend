@@ -8,6 +8,8 @@ let MongoClient = require('mongodb').MongoClient;
 let assert = require('assert');
 let bodyParser = require('body-parser');
 let jwt = require('jsonwebtoken');
+let bcrypt  = require('bcrypt');
+const saltRounds = 10;
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -53,7 +55,6 @@ apiRoutes.use(function(req, res, next) {
 
 app.post('/login', function(req, res) {
   res.setHeader('Content-Type', 'application/json');
-
   // Destructure login info from request body into individual variables
   let {email, password} = req.body;
 
@@ -70,20 +71,22 @@ app.post('/login', function(req, res) {
         let userObject = result[0];
 
         // If our user is authenticated successfully, generate a token and respond with it
-        // TODO: Secure the password value, at least hashing it or something!
-        if (password === userObject.password) {
-          let token = jwt.sign(userObject, app.get('uberSecret'), {
-            expiresIn: '1d'
-          });
+        bcrypt.compare(password, userObject.password, function(err, compResult){
+          if (compResult === true) {
+            let token = jwt.sign(userObject, app.get('uberSecret'), {
+              expiresIn: '1d'
+            });
 
-          res.json({
-            message: 'ok',
-            firstName: userObject.firstName,
-            token
-          });
-        } else {
-          throw 'Password does not match.';
-        }
+            res.json({
+              message: 'ok',
+              firstName: userObject.firstName,
+              email: userObject.email,
+              token
+            });
+          } else {
+            throw 'Password does not match.';
+          }
+        });
         console.log('Found in database:', result);
       });
     });
@@ -104,24 +107,26 @@ app.post('/newUser', function(req, res) {
   console.log(city);
   console.log(state);
   console.log(email);
-  console.log(password);
   console.log(new Date());
 
-  MongoClient.connect(config.database, function(err, db) {
-    assert.equal(null, err);
-    // Add a new user object to the database using the data from the request
-    db.collection('users').insertOne({
-      firstName,
-      lastName,
-      streetAddress,
-      city,
-      state,
-      email,
-      password
-    }, function(err, result) {
-      assert.equal(err, null);
-      console.log('Inserted user into db');
-      db.close();
+  bcrypt.genSalt(saltRounds, function(err, salt){
+    bcrypt.hash(password, salt, function(err, hash){
+      MongoClient.connect(config.database, function(err, db){
+        assert.equal(null, err);
+        db.collection('users').insertOne({
+          firstName,
+          lastName,
+          streetAddress,
+          city,
+          state,
+          email,
+          password: hash
+        }, function(err, result) {
+          assert.equal(err, null);
+          console.log('Inserted user into db');
+          db.close();
+        });
+      });
     });
   });
 
@@ -138,7 +143,7 @@ apiRoutes.post('/usageEvent', function(req, res) {
 
   // Destructure new usage event fields from request body into individual variables
   let {id, startTime, endTime, totalVolume} = req.body;
-  
+
   console.log('\n\n-------------------------');
   console.log('New Usage Event logged!');
   console.log(id);
@@ -162,6 +167,57 @@ apiRoutes.post('/usageEvent', function(req, res) {
   */
 });
 
+app.post('/api/addMeter', function(req, res) {
+  console.log(req);
+  res.send('You sent a usageEvent to Express');
+  let numMeters = 0;
+
+  let meterName = req.body.meterName;
+  let userEmail = req.body.userEmail;
+  MongoClient.connect(config.database, function(err, db) {
+    assert.equal(null, err);
+    db.collection('meters').find({email: userEmail}).toArray(function (err, result) {
+      numMeters = result.length;
+    });
+  });
+
+  let meterId = numMeters + 1;
+
+  MongoClient.connect(config.database, function(err, db) {
+    assert.equal(null, err);
+    db.collection('meters').insertOne({
+      meterId,
+      meterName,
+      userEmail
+    }, function(err, result) {
+      assert.equal(err, null);
+      console.log('Inserted meter into db');
+      db.close();
+    });
+  });
+
+  console.log('\n\n-------------------------');
+  console.log('New Meter Added!');
+  console.log(meterId);
+  console.log(meterName);
+  console.log(userEmail);
+  console.log(new Date());
+  res.send('New Meter Added');
+  /*
+  MongoClient.connect(dburl, function(err, db) {
+    if (err) return
+
+    let collection = db.collection('flow')
+    collection.insert({id: idVal, startTime: startTimeVal, endTime: endTimeVal, totalVolume: totalVolumeVal}, function(err, result) {
+      collection.find({id: '1234'}).toArray(function(err, docs) {
+        console.log(docs[0])
+        db.close()
+      })
+    })
+  })
+  */
+});
+
 apiRoutes.get('/getUsageEvent', function(req, res) {
   let email = req.param('email');
 
@@ -180,6 +236,5 @@ apiRoutes.get('/getUsageEvent', function(req, res) {
 //-----
 // Fire up the server!
 //-----
-
 app.listen(port);
 console.log(`Flow-backend server running on port ${port}`);
