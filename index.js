@@ -217,7 +217,7 @@ app.post('/api/addMeter', function(req, res) {
 });
 
 apiRoutes.get('/getUsageEvent', function(req, res) {
-  let email = req.param('email');
+  let {email} = req.query;
 
   console.log('\n\n-------------------------');
   console.log(`Usage event for ${email} pulled`);
