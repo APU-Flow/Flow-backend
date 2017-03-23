@@ -3,13 +3,11 @@
 // Flow Backend server
 let express = require('express');
 let app = express();
-let port = 3000;
 let MongoClient = require('mongodb').MongoClient;
 let assert = require('assert');
 let bodyParser = require('body-parser');
 let jwt = require('jsonwebtoken');
 let bcrypt  = require('bcrypt');
-const saltRounds = 10;
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -65,13 +63,13 @@ app.post('/login', function(req, res) {
   try {
     MongoClient.connect(config.database, function(err, db) {
       assert.equal(null, err);
-      db.collection('users').find({ email }).toArray(function (err, result) {
+      db.collection('users').find({ email }).toArray(function(err, result) {
         // The user which matches should be the only item in the result toArray
         // TODO: Handle multiple matches well! Right now it only grabs the first and ignores others.
         let userObject = result[0];
 
         // If our user is authenticated successfully, generate a token and respond with it
-        bcrypt.compare(password, userObject.password, function(err, compResult){
+        bcrypt.compare(password, userObject.password, function(err, compResult) {
           if (compResult === true) {
             let token = jwt.sign(userObject, app.get('uberSecret'), {
               expiresIn: '1d'
@@ -109,9 +107,9 @@ app.post('/newUser', function(req, res) {
   console.log(email);
   console.log(new Date());
 
-  bcrypt.genSalt(saltRounds, function(err, salt){
-    bcrypt.hash(password, salt, function(err, hash){
-      MongoClient.connect(config.database, function(err, db){
+  bcrypt.genSalt(config.saltRounds, function(err, salt) {
+    bcrypt.hash(password, salt, function(err, hash) {
+      MongoClient.connect(config.database, function(err, db) {
         assert.equal(null, err);
         db.collection('users').insertOne({
           firstName,
@@ -176,7 +174,7 @@ app.post('/api/addMeter', function(req, res) {
   let userEmail = req.body.userEmail;
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
-    db.collection('meters').find({email: userEmail}).toArray(function (err, result) {
+    db.collection('meters').find({email: userEmail}).toArray(function(err, result) {
       numMeters = result.length;
     });
   });
@@ -236,5 +234,5 @@ apiRoutes.get('/getUsageEvent', function(req, res) {
 //-----
 // Fire up the server!
 //-----
-app.listen(port);
-console.log(`Flow-backend server running on port ${port}`);
+app.listen(config.port);
+console.log(`Flow-backend server running on port ${config.port}`);
