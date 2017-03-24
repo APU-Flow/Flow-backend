@@ -165,7 +165,7 @@ apiRoutes.post('/usageEvent', function(req, res) {
   */
 });
 
-app.post('/api/addMeter', function(req, res) {
+apiRoutes.post('/addMeter', function(req, res) {
   console.log(req);
   res.send('You sent a usageEvent to Express');
   let numMeters = 0;
