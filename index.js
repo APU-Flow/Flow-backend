@@ -1,22 +1,22 @@
 'use strict';
 // index.js
 // Flow Backend server
-let express = require('express');
-let app = express();
-let MongoClient = require('mongodb').MongoClient;
-let assert = require('assert');
-let bodyParser = require('body-parser');
-let jwt = require('jsonwebtoken');
-let bcrypt  = require('bcrypt');
+const express = require('express');
+const app = express();
+const MongoClient = require('mongodb').MongoClient;
+const assert = require('assert');
+const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+const bcrypt  = require('bcrypt');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-let config = require('./config');     // Get our config file
+const config = require('./config');     // Get our config file
 app.set('uberSecret', config.secret); // Set the secret value used for JWTs
 
 // Configure a special Router for /api/ routes with middleware for JWT auth
-let apiRoutes = express.Router();
+const apiRoutes = express.Router();
 app.use('/api', apiRoutes);
 apiRoutes.use(function(req, res, next) {
 
