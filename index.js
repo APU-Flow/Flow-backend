@@ -44,7 +44,7 @@ apiRoutes.use(function(req, res, next) {
       message: 'No token provided.'
     });
   }
-});
+}); // End JWT authentication middleware
 
 
 //-----
@@ -92,7 +92,7 @@ app.post('/login', function(req, res) {
     // If the authentication fails, respond with an appropriate message
     res.json({ message: 'lol nice tri n00b' });
   }
-});
+}); // End route POST /login
 
 app.post('/newUser', function(req, res) {
   // Destructure new user fields from request body into individual variables
@@ -123,13 +123,13 @@ app.post('/newUser', function(req, res) {
           assert.equal(err, null);
           console.log('Inserted user into db');
           db.close();
-        });
-      });
-    });
-  });
+        }); //End insertOne() for the user
+      }); // End MongoClient connection
+    }); // End hash()
+  }); // End genSalt()
 
   res.json({ status: 'ok', userEmail: email });
-});
+}); // End route POST /newUser
 
 
 //-----
@@ -163,58 +163,32 @@ apiRoutes.post('/usageEvent', function(req, res) {
     });
   });
   */
-});
+}); // End route POST /usageEvent
 
 apiRoutes.post('/addMeter', function(req, res) {
   console.log(req);
   res.send('You sent a usageEvent to Express');
-  let numMeters = 0;
+  let {meterName, userEmail} = req.body;
 
-  let meterName = req.body.meterName;
-  let userEmail = req.body.userEmail;
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
     db.collection('meters').find({email: userEmail}).toArray(function(err, result) {
-      numMeters = result.length;
-    });
-  });
+      let meterId = result.length + 1;
 
-  let meterId = numMeters + 1;
+      db.collection('meters').insertOne({
+        meterId,
+        meterName,
+        userEmail
+      }, function(err, result) {
+        assert.equal(err, null);
+        console.log('Inserted meter into db');
+        db.close();
+      }); // End insertOne() for the meter
 
-  MongoClient.connect(config.database, function(err, db) {
-    assert.equal(null, err);
-    db.collection('meters').insertOne({
-      meterId,
-      meterName,
-      userEmail
-    }, function(err, result) {
-      assert.equal(err, null);
-      console.log('Inserted meter into db');
-      db.close();
-    });
-  });
+    }); // End find() for the user's meters
+  }); // End MongoClient connection
 
-  console.log('\n\n-------------------------');
-  console.log('New Meter Added!');
-  console.log(meterId);
-  console.log(meterName);
-  console.log(userEmail);
-  console.log(new Date());
-  res.send('New Meter Added');
-  /*
-  MongoClient.connect(dburl, function(err, db) {
-    if (err) return
-
-    let collection = db.collection('flow')
-    collection.insert({id: idVal, startTime: startTimeVal, endTime: endTimeVal, totalVolume: totalVolumeVal}, function(err, result) {
-      collection.find({id: '1234'}).toArray(function(err, docs) {
-        console.log(docs[0])
-        db.close()
-      })
-    })
-  })
-  */
-});
+}); // End route POST /addMeter
 
 apiRoutes.get('/getUsageEvent', function(req, res) {
   let email = req.param('email');
@@ -226,9 +200,10 @@ apiRoutes.get('/getUsageEvent', function(req, res) {
     assert.equal(null, err);
     db.collection('events').find({ email }).toArray(function(err, result) {
       res.send(result[0]);
-    });
-  });
-});
+    }); //End find() for the events
+  }); //End MongoClient connection
+
+}); // End route GET /getUsageEvent
 
 
 //-----
