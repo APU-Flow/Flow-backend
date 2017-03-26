@@ -106,40 +106,40 @@ app.post('/newUser', function(req, res) {
         res.json({status: 'bad', message: 'This email adress is already registered to a user.'});
         return;
       }
-    });
-  });
+      else{
+        console.log('\n\n-------------------------');
+        console.log('New user registered');
+        console.log(firstName);
+        console.log(lastName);
+        console.log(city);
+        console.log(state);
+        console.log(email);
+        console.log(new Date());
 
-  console.log('\n\n-------------------------');
-  console.log('New user registered');
-  console.log(firstName);
-  console.log(lastName);
-  console.log(city);
-  console.log(state);
-  console.log(email);
-  console.log(new Date());
-
-  bcrypt.genSalt(saltRounds, function(err, salt){
-    bcrypt.hash(password, salt, function(err, hash){
-      MongoClient.connect(config.database, function(err, db){
-        assert.equal(null, err);
-        db.collection('users').insertOne({
-          firstName,
-          lastName,
-          streetAddress,
-          city,
-          state,
-          email,
-          password: hash
-        }, function(err, result) {
-          assert.equal(err, null);
-          console.log('Inserted user into db');
-          db.close();
+        bcrypt.genSalt(saltRounds, function(err, salt){
+          bcrypt.hash(password, salt, function(err, hash){
+            MongoClient.connect(config.database, function(err, db){
+              assert.equal(null, err);
+              db.collection('users').insertOne({
+                firstName,
+                lastName,
+                streetAddress,
+                city,
+                state,
+                email,
+                password: hash
+              }, function(err, result) {
+                assert.equal(err, null);
+                console.log('Inserted user into db');
+                db.close();
+              });
+            });
+          });
         });
-      });
+        res.json({ status: 'ok', userEmail: email });
+      }
     });
   });
-
-  res.json({ status: 'ok', userEmail: email });
 });
 
 
