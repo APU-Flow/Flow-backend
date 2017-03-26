@@ -99,6 +99,15 @@ app.post('/login', function(req, res) {
 app.post('/newUser', function(req, res) {
   // Destructure new user fields from request body into individual variables
   let {firstName, lastName, streetAddress, city, state, email, password} = req.body;
+  MongoClient.connect(config.database, function(err, db) {
+    assert.equal(null, err);
+    db.collection('users').find({ email }).toArray(function (err, result) {
+      if(result.length == 0){
+        res.json({status: 'bad', message: 'This email adress is already registered to a user.'});
+        return;
+      }
+    });
+  });
 
   console.log('\n\n-------------------------');
   console.log('New user registered');
