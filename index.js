@@ -164,7 +164,9 @@ app.post('/usageEvent', function(req, res) {
   console.log(email);
   let timeRecieved = new Date();
   console.log(timeRecieved);
-  let trueStartTime = new Date(timeRecieved - 60000 - duration);
+  let trueStartTime = timeRecieved;
+  trueStartTime.setMinutes(trueStartTime.getMinutes() - 2);
+  trueStartTime.setMilliseconds(trueStartTime.getMilliseconds() - duration);
   console.log(trueStartTime);
 
   res.send('New usage event logged');
