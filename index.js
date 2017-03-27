@@ -150,8 +150,6 @@ app.post('/newUser', function(req, res) {
 //-----
 
 app.post('/usageEvent', function(req, res) {
-  console.log(req);
-
   // Destructure new usage event fields from request body into individual variables
   let {meterId, startTime, duration, totalVolume, email} = req.body;
 
@@ -162,15 +160,12 @@ app.post('/usageEvent', function(req, res) {
   console.log(totalVolume);
   console.log(meterId);
   console.log(email);
-  let timeRecieved = new Date();
-  console.log(timeRecieved);
   let dateObj = Date.now();
   dateObj -= (120000 + parseInt(duration));
   let trueStartTime = new Date(dateObj);
   console.log(trueStartTime);
 
   res.send('New usage event logged');
-  /*
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
     db.collection('events').insertOne({
@@ -185,7 +180,6 @@ app.post('/usageEvent', function(req, res) {
       db.close();
     });
   });
-  */
 });
 
 
