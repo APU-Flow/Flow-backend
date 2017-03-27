@@ -104,7 +104,7 @@ app.post('/newUser', function(req, res) {
   let {firstName, lastName, streetAddress, city, state, email, password} = req.body;
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
-    db.collection('users').count({ email }, function (err, count) {
+    db.collection('users').count({ email }, function(err, count) {
       if (count !== 0) {
         res.json({status: 'bad', message: 'This email adress is already registered to a user.'});
         db.close();
@@ -118,8 +118,8 @@ app.post('/newUser', function(req, res) {
         console.log(email);
         console.log(new Date());
 
-        bcrypt.genSalt(saltRounds, function(err, salt){
-          bcrypt.hash(password, salt, function(err, hash){
+        bcrypt.genSalt(config.saltRounds, function(err, salt) {
+          bcrypt.hash(password, salt, function(err, hash) {
             assert.equal(null, err);
             db.collection('users').insertOne({
               firstName,
