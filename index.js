@@ -147,18 +147,19 @@ app.post('/newUser', function(req, res) {
 // Protected API Routes (on '/api/')
 //-----
 
-apiRoutes.post('/usageEvent', function(req, res) {
+app.post('/usageEvent', function(req, res) {
   console.log(req);
 
   // Destructure new usage event fields from request body into individual variables
-  let {id, startTime, endTime, totalVolume} = req.body;
+  let {meterId, startTime, duration, totalVolume, email} = req.body;
 
   console.log('\n\n-------------------------');
   console.log('New Usage Event logged!');
-  console.log(id);
   console.log(startTime);
-  console.log(endTime);
+  console.log(duration);
   console.log(totalVolume);
+  console.log(meterId);
+  console.log(email);
   console.log(new Date());
   res.send('New usage event logged');
   /*
