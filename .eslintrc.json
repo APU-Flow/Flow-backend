@@ -28,6 +28,7 @@
             "error",
             { "args": "none" }
         ],
+        "no-trailing-spaces": 1,
         "arrow-spacing": [
             "error",
             { "before": true, "after": true }
