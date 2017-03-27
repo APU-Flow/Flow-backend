@@ -165,7 +165,7 @@ app.post('/usageEvent', function(req, res) {
   let timeRecieved = new Date();
   console.log(timeRecieved);
   let dateObj = Date.now();
-  dateObj -= (120000 + Number(duration));
+  dateObj -= (120000 + parseInt(duration));
   let trueStartTime = new Date(dateObj);
   console.log(trueStartTime);
 
