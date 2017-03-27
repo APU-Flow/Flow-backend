@@ -147,34 +147,38 @@ app.post('/newUser', function(req, res) {
 // Protected API Routes (on '/api/')
 //-----
 
-apiRoutes.post('/usageEvent', function(req, res) {
-  console.log(req);
-
+app.post('/usageEvent', function(req, res) { // Temporarily on /, not /api, because token auth on the meter isn't working yet
   // Destructure new usage event fields from request body into individual variables
-  let {id, startTime, endTime, totalVolume} = req.body;
+  let {meterId, startTime, duration, totalVolume, email} = req.body;
 
   console.log('\n\n-------------------------');
   console.log('New Usage Event logged!');
-  console.log(id);
   console.log(startTime);
-  console.log(endTime);
+  console.log(duration);
   console.log(totalVolume);
-  console.log(new Date());
+  console.log(meterId);
+  console.log(email);
+  let dateObj = Date.now();
+  dateObj -= (120000 + parseInt(duration));
+  let trueStartTime = new Date(dateObj);
+  console.log(trueStartTime);
+
   res.send('New usage event logged');
-  /*
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
-
-    let collection = db.collection('flow');
-    collection.insert({ id, startTime, endTime, totalVolume }, function(err, result) {
-      collection.find({ id: '1234' }).toArray(function(err, docs) {
-        console.log(docs[0]);
-        db.close();
-      });
+    db.collection('events').insertOne({
+      meterId,
+      'startTime': trueStartTime,
+      totalVolume,
+      duration,
+      email
+    }, function(err, result) {
+      assert.equal(err, null);
+      console.log('Inserted usage event into db');
+      db.close();
     });
   });
-  */
-}); // End route POST /usageEvent
+});
 
 apiRoutes.post('/addMeter', function(req, res) {
   console.log(req);
@@ -192,13 +196,18 @@ apiRoutes.post('/addMeter', function(req, res) {
         userEmail
       }, function(err, result) {
         assert.equal(err, null);
-        console.log('Inserted meter into db');
+        console.log('\n\n-------------------------');
+        console.log('New Meter Added!');
+        console.log(meterId);
+        console.log(meterName);
+        console.log(userEmail);
+        console.log(new Date());
+        res.send('New Meter Added');
         db.close();
       }); // End insertOne() for the meter
 
     }); // End find() for the user's meters
   }); // End MongoClient connection
-
 }); // End route POST /addMeter
 
 apiRoutes.get('/getUsageEvent', function(req, res) {
