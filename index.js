@@ -1,24 +1,22 @@
 'use strict';
 // index.js
 // Flow Backend server
-let express = require('express');
-let app = express();
-let port = 3000;
-let MongoClient = require('mongodb').MongoClient;
-let assert = require('assert');
-let bodyParser = require('body-parser');
-let jwt = require('jsonwebtoken');
-let bcrypt  = require('bcrypt');
-const saltRounds = 10;
+const express = require('express');
+const app = express();
+const MongoClient = require('mongodb').MongoClient;
+const assert = require('assert');
+const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+const bcrypt  = require('bcrypt');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-let config = require('./config');     // Get our config file
+const config = require('./config');     // Get our config file
 app.set('uberSecret', config.secret); // Set the secret value used for JWTs
 
 // Configure a special Router for /api/ routes with middleware for JWT auth
-let apiRoutes = express.Router();
+const apiRoutes = express.Router();
 app.use('/api', apiRoutes);
 apiRoutes.use(function(req, res, next) {
 
@@ -120,7 +118,7 @@ app.post('/newUser', function(req, res) {
         console.log(email);
         console.log(new Date());
 
-        bcrypt.genSalt(saltRounds, function(err, salt){
+        bcrypt.genSalt(config.saltRounds, function(err, salt){
           bcrypt.hash(password, salt, function(err, hash){
             assert.equal(null, err);
             db.collection('users').insertOne({
@@ -149,36 +147,41 @@ app.post('/newUser', function(req, res) {
 // Protected API Routes (on '/api/')
 //-----
 
-apiRoutes.post('/usageEvent', function(req, res) {
-  console.log(req);
-
+app.post('/usageEvent', function(req, res) { // Temporarily on /, not /api, because token auth on the meter isn't working yet 
   // Destructure new usage event fields from request body into individual variables
-  let {id, startTime, endTime, totalVolume} = req.body;
+  let {meterId, startTime, duration, totalVolume, email} = req.body;
 
   console.log('\n\n-------------------------');
   console.log('New Usage Event logged!');
-  console.log(id);
   console.log(startTime);
-  console.log(endTime);
+  console.log(duration);
   console.log(totalVolume);
-  console.log(new Date());
+  console.log(meterId);
+  console.log(email);
+  let dateObj = Date.now();
+  dateObj -= (120000 + parseInt(duration));
+  let trueStartTime = new Date(dateObj);
+  console.log(trueStartTime);
+
   res.send('New usage event logged');
-  /*
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
-
-    let collection = db.collection('flow');
-    collection.insert({ id, startTime, endTime, totalVolume }, function(err, result) {
-      collection.find({ id: '1234' }).toArray(function(err, docs) {
-        console.log(docs[0]);
-        db.close();
-      });
+    db.collection('events').insertOne({
+      meterId,
+      'startTime': trueStartTime,
+      totalVolume,
+      duration,
+      email
+    }, function(err, result) {
+      assert.equal(err, null);
+      console.log('Inserted usage event into db');
+      db.close();
     });
   });
-  */
 });
 
-app.post('/api/addMeter', function(req, res) {
+
+apiRoutes.post('/addMeter', function(req, res) {
   console.log(req);
   res.send('You sent a usageEvent to Express');
   let numMeters = 0;
@@ -214,19 +217,6 @@ app.post('/api/addMeter', function(req, res) {
   console.log(userEmail);
   console.log(new Date());
   res.send('New Meter Added');
-  /*
-  MongoClient.connect(dburl, function(err, db) {
-    if (err) return
-
-    let collection = db.collection('flow')
-    collection.insert({id: idVal, startTime: startTimeVal, endTime: endTimeVal, totalVolume: totalVolumeVal}, function(err, result) {
-      collection.find({id: '1234'}).toArray(function(err, docs) {
-        console.log(docs[0])
-        db.close()
-      })
-    })
-  })
-  */
 });
 
 apiRoutes.get('/getUsageEvent', function(req, res) {
@@ -247,5 +237,5 @@ apiRoutes.get('/getUsageEvent', function(req, res) {
 //-----
 // Fire up the server!
 //-----
-app.listen(port);
-console.log(`Flow-backend server running on port ${port}`);
+app.listen(config.port);
+console.log(`Flow-backend server running on port ${config.port}`);
