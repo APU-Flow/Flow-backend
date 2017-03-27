@@ -67,7 +67,7 @@ app.post('/login', function(req, res) {
       assert.equal(null, err);
       db.collection('users').find({ email }).toArray(function (err, result) {
         // The user which matches should be the only item in the result toArray
-        // TODO: Handle multiple matches well! Right now it only grabs the first and ignores others.
+        assert.ok(result.length === 1);
         let userObject = result[0];
 
         // If our user is authenticated successfully, generate a token and respond with it
@@ -88,11 +88,16 @@ app.post('/login', function(req, res) {
           }
         });
         console.log('Found in database:', result);
+        db.close();
       });
     });
   } catch (e) {
-    // If the authentication fails, respond with an appropriate message
-    res.json({ message: 'lol nice tri n00b' });
+    if (e.name === 'AssertionError') {
+      throw e;
+    } else {
+      // If the authentication fails, respond with an appropriate message
+      res.json({ message: 'lol nice tri n00b' });
+    }
   }
 });
 
@@ -101,12 +106,11 @@ app.post('/newUser', function(req, res) {
   let {firstName, lastName, streetAddress, city, state, email, password} = req.body;
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
-    db.collection('users').find({ email }).toArray(function (err, result) {
-      if(result.length == 0){
+    db.collection('users').count({ email }, function (err, count) {
+      if (count !== 0) {
         res.json({status: 'bad', message: 'This email adress is already registered to a user.'});
-        return;
-      }
-      else{
+        db.close();
+      } else {
         console.log('\n\n-------------------------');
         console.log('New user registered');
         console.log(firstName);
@@ -118,29 +122,27 @@ app.post('/newUser', function(req, res) {
 
         bcrypt.genSalt(saltRounds, function(err, salt){
           bcrypt.hash(password, salt, function(err, hash){
-            MongoClient.connect(config.database, function(err, db){
-              assert.equal(null, err);
-              db.collection('users').insertOne({
-                firstName,
-                lastName,
-                streetAddress,
-                city,
-                state,
-                email,
-                password: hash
-              }, function(err, result) {
-                assert.equal(err, null);
-                console.log('Inserted user into db');
-                db.close();
-              });
-            });
-          });
-        });
+            assert.equal(null, err);
+            db.collection('users').insertOne({
+              firstName,
+              lastName,
+              streetAddress,
+              city,
+              state,
+              email,
+              password: hash
+            }, function(err, result) {
+              assert.equal(err, null);
+              console.log('Inserted user into db');
+              db.close();
+            }); // End insertOne for the new user
+          }); // End password hash
+        }); // End saltGen
         res.json({ status: 'ok', userEmail: email });
       }
-    });
-  });
-});
+    }); // End user count
+  }); // End MongoClient connection
+}); // End route
 
 
 //-----
