@@ -162,22 +162,30 @@ app.post('/usageEvent', function(req, res) {
   console.log(totalVolume);
   console.log(meterId);
   console.log(email);
-  console.log(new Date());
+  let timeRecieved = new Date();
+  console.log(timeRecieved);
+  let trueStartTime = new Date(timeRecieved - 60000 - duration);
+  console.log(trueStartTime);
+
   res.send('New usage event logged');
   /*
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
-
-    let collection = db.collection('flow');
-    collection.insert({ id, startTime, endTime, totalVolume }, function(err, result) {
-      collection.find({ id: '1234' }).toArray(function(err, docs) {
-        console.log(docs[0]);
-        db.close();
-      });
+    db.collection('events').insertOne({
+      meterId,
+      'startTime': trueStartTime,
+      totalVolume,
+      duration,
+      email
+    }, function(err, result) {
+      assert.equal(err, null);
+      console.log('Inserted usage event into db');
+      db.close();
     });
   });
   */
 });
+
 
 app.post('/api/addMeter', function(req, res) {
   console.log(req);
