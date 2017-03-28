@@ -211,7 +211,7 @@ apiRoutes.post('/addMeter', function(req, res) {
 }); // End route POST /addMeter
 
 apiRoutes.get('/getUsageEvent', function(req, res) {
-  let {email, startTime, endTime} = req.query;
+  let {email, meterId, startTime, endTime} = req.query;
   let useTimes = (typeof startTime !== 'undefined' && typeof endTime !== 'undefined');
   if (useTimes) {
     startTime = new Date(startTime);
@@ -227,11 +227,12 @@ apiRoutes.get('/getUsageEvent', function(req, res) {
     // Construct a query that finds relevant usage events
     let query = (useTimes) ? { // If we're using time restrictions...
       email,
+      meterId,
       $and: [ // ...then include all events with startTime between our start and end times...
         {startTime: {$gte: startTime - 1800000}}, // Include 30-minute buffer before startTime
         {startTime: {$lte: endTime}}              // Inside the cursor we'll investigate the duration
       ]                                           // to check which border events stay and which go
-    } : { email }; // ...otherwise exclude startTime and endTime from the query
+    } : { email, meterId }; // ...otherwise exclude startTime and endTime from the query
 
     let results = [];
     db.collection('events').find(query).forEach(function(event) {
