@@ -161,15 +161,15 @@ app.post('/usageEvent', function(req, res) {
   console.log(totalVolume);
   console.log(meterId);
   console.log(email);
-  let trueStartTime = moment().subtract(2, 'minutes').subtract(Number(duration), 'milliseconds').toString();
-  console.log(trueStartTime);
+  let trueStartTime = moment().subtract(2, 'minutes').subtract(Number(duration), 'milliseconds');
 
   res.send('New usage event logged');
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
     db.collection('events').insertOne({
       meterId,
-      'startTime': trueStartTime,
+      'startTimeString': trueStartTime.toString(),
+      'startTimeObject': trueStartTime.toObject(),
       totalVolume,
       duration,
       email
