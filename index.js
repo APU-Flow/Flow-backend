@@ -9,6 +9,7 @@ let assert = require('assert');
 let bodyParser = require('body-parser');
 let jwt = require('jsonwebtoken');
 let bcrypt  = require('bcrypt');
+let moment = require('moment');
 const saltRounds = 10;
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -160,9 +161,7 @@ app.post('/usageEvent', function(req, res) {
   console.log(totalVolume);
   console.log(meterId);
   console.log(email);
-  let dateObj = Date.now();
-  dateObj -= (120000 + Number(duration));
-  let trueStartTime = new Date(dateObj);
+  let trueStartTime = moment().subtract(2, 'minutes').subtract(Number(duration), 'milliseconds').toDate();
   console.log(trueStartTime);
 
   res.send('New usage event logged');
