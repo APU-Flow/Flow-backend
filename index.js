@@ -161,7 +161,7 @@ app.post('/usageEvent', function(req, res) {
   console.log(totalVolume);
   console.log(meterId);
   console.log(email);
-  let trueStartTime = moment().subtract(2, 'minutes').subtract(Number(duration), 'milliseconds').toDate();
+  let trueStartTime = moment().subtract(2, 'minutes').subtract(Number(duration), 'milliseconds').toString();
   console.log(trueStartTime);
 
   res.send('New usage event logged');
