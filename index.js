@@ -160,9 +160,9 @@ app.post('/usageEvent', function(req, res) {
   console.log(totalVolume);
   console.log(meterId);
   console.log(email);
-  let dateObj = Date.now();
-  dateObj -= (120000 + parseInt(duration));
-  let trueStartTime = new Date(dateObj);
+  let trueStartTime = new Date();
+  trueStartTime.setMinutes(trueStartTime.getMinutes() - 2);
+  trueStartTime.setMilliseconds(trueStartTime.getMilliseconds() - Number(duration));
   console.log(trueStartTime);
 
   res.send('New usage event logged');
