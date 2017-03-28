@@ -160,15 +160,15 @@ app.post('/usageEvent', function(req, res) { // Temporarily on /, not /api, beca
   console.log(email);
   let dateObj = Date.now();
   dateObj -= (120000 + parseInt(duration));
-  let trueStartTime = new Date(dateObj);
-  console.log(trueStartTime);
+  startTime = new Date(dateObj);
+  console.log(startTime);
 
   res.send('New usage event logged');
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
     db.collection('events').insertOne({
       meterId,
-      'startTime': trueStartTime,
+      startTime,
       totalVolume,
       duration,
       email
@@ -211,18 +211,49 @@ apiRoutes.post('/addMeter', function(req, res) {
 }); // End route POST /addMeter
 
 apiRoutes.get('/getUsageEvent', function(req, res) {
-  let email = req.param('email');
+  let {email, startTime, endTime} = req.query;
+  let useTimes = (typeof startTime !== 'undefined' && typeof endTime !== 'undefined');
+  if (useTimes) {
+    startTime = new Date(startTime);
+    endTime = new Date(endTime);
+  }
+  assert.notEqual(null, email);
 
   console.log('\n\n-------------------------');
   console.log(`Usage event for ${email} pulled`);
 
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
-    db.collection('events').find({ email }).toArray(function(err, result) {
-      res.send(result[0]);
-    }); //End find() for the events
-  }); //End MongoClient connection
+    // Construct a query that finds relevant usage events
+    let query = (useTimes) ? { // If we're using time restrictions...
+      email,
+      $and: [ // ...then include all events with startTime between our start and end times...
+        {startTime: {$gte: startTime - 1800000}}, // Include 30-minute buffer before startTime
+        {startTime: {$lte: endTime}}              // Inside the cursor we'll investigate the duration
+      ]                                           // to check which border events stay and which go
+    } : { email }; // ...otherwise exclude startTime and endTime from the query
 
+    let results = [];
+    db.collection('events').find(query).forEach(function(event) {
+      // Iterator callback - called once for each event found
+      let eventIsInRange = (useTimes) ? ( // If we're using time restrictions...
+        event.startTime >= startTime - event.duration/2 && // ...then ensure that at least half of the
+        event.endTime >= startTime + event.duration/2 &&   // event's time was spent during our range...
+        event.endTime - endTime <= event.duration/2
+      ) : true; // ...otherwise always include the event in our range
+
+      if (eventIsInRange) {
+        results.push(event);
+      }
+    }, function(err) {
+      // End callback - called once after iteration is complete
+      if (results.length > 0) {
+        res.send(results);
+      } else {
+        res.json({status: 'bad', message: 'No data found for given parameters.'});
+      }
+    }); // End find() query
+  }); //End MongoClient connection
 }); // End route GET /getUsageEvent
 
 
