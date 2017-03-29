@@ -210,8 +210,50 @@ apiRoutes.post('/addMeter', function(req, res) {
   }); // End MongoClient connection
 }); // End route POST /addMeter
 
+
 apiRoutes.get('/getUsageEvent', function(req, res) {
   let {email, meterId, startTime, endTime} = req.query;
+  res.send( getUsageEvents(email, meterId, startTime, endTime) );
+}); // End route GET /getUsageEvent
+
+apiRoutes.get('/getDailyUsage', function(req, res) {
+  let {email, meterId, date} = req.query;
+
+  let startTime = new Date(date);
+  startTime.setHours(0,0,0,0);
+
+  let endTime = new Date(startTime);
+  endTime.setDate(endTime.getDate() + 1);
+
+  res.send( getUsageEvents(email, meterId, startTime, endTime) );
+}); // End route GET /getDailyUsage
+
+apiRoutes.get('/getWeeklyUsage', function(req, res) {
+  let {email, meterId, date} = req.query;
+
+  let endTime = new Date(date);
+  endTime.setHours(0,0,0,0);
+
+  let startTime = new Date(endTime.valueOf() - 604800000);
+
+  res.send( getUsageEvents(email, meterId, startTime, endTime) );
+}); // End route GET /getWeeklyUsage
+
+apiRoutes.get('/getMonthlyUsage', function(req, res) {
+  let {email, meterId, year} = req.query;
+
+  let endTime = new Date(year,0,0,0,0,0,0);
+  let startTime = new Date(endTime);
+  endTime.setFullYear(startTime.getFullYear() - 1);
+
+  res.send( getUsageEvents(email, meterId, startTime, endTime) );
+}); // End route GET /getMonthlyUsage
+
+
+//-----
+// Helper Methods
+//-----
+function getUsageEvents(email, meterId, startTime, endTime) {
   let useTimes = (typeof startTime !== 'undefined' && typeof endTime !== 'undefined');
   if (useTimes) {
     startTime = new Date(startTime);
@@ -227,12 +269,14 @@ apiRoutes.get('/getUsageEvent', function(req, res) {
     // Construct a query that finds relevant usage events
     let query = (useTimes) ? { // If we're using time restrictions...
       email,
-      meterId,
       $and: [ // ...then include all events with startTime between our start and end times...
-        {startTime: {$gte: startTime - 1800000}}, // Include 30-minute buffer before startTime
-        {startTime: {$lte: endTime}}              // Inside the cursor we'll investigate the duration
-      ]                                           // to check which border events stay and which go
-    } : { email, meterId }; // ...otherwise exclude startTime and endTime from the query
+        {startTime: {$gte: startTime}},
+        {startTime: {$lt: endTime}}
+      ]
+    } : { email }; // ...otherwise exclude startTime and endTime from the query
+    if (typeof meterId !== 'undefined' && meterId !== null) {
+      query.meterId = meterId;
+    }
 
     let results = [];
     db.collection('events').find(query).forEach(function(event) {
@@ -248,14 +292,10 @@ apiRoutes.get('/getUsageEvent', function(req, res) {
       }
     }, function(err) {
       // End callback - called once after iteration is complete
-      if (results.length > 0) {
-        res.send(results);
-      } else {
-        res.json({status: 'bad', message: 'No data found for given parameters.'});
-      }
+      return (results.length > 0) ? results : {status: 'bad', message: 'No data found for given parameters.'};
     }); // End find() query
   }); //End MongoClient connection
-}); // End route GET /getUsageEvent
+}
 
 
 //-----
