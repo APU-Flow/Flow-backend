@@ -9,7 +9,6 @@ let assert = require('assert');
 let bodyParser = require('body-parser');
 let jwt = require('jsonwebtoken');
 let bcrypt  = require('bcrypt');
-let moment = require('moment');
 const saltRounds = 10;
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -161,15 +160,14 @@ app.post('/usageEvent', function(req, res) {
   console.log(totalVolume);
   console.log(meterId);
   console.log(email);
-  let trueStartTime = moment().subtract(2, 'minutes').subtract(Number(duration), 'milliseconds');
+  let trueStartTime = new Date(new Date().valueOf() - (120000 + Number(duration)));
 
   res.send('New usage event logged');
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
     db.collection('events').insertOne({
       meterId,
-      'startTimeString': trueStartTime.toString(),
-      'startTimeObject': trueStartTime.toObject(),
+      'startTime': trueStartTime,
       totalVolume,
       duration,
       email
