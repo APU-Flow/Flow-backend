@@ -44,7 +44,7 @@ apiRoutes.use(function(req, res, next) {
       message: 'No token provided.'
     });
   }
-});
+}); // End JWT authentication middleware
 
 
 //-----
@@ -63,13 +63,13 @@ app.post('/login', function(req, res) {
   try {
     MongoClient.connect(config.database, function(err, db) {
       assert.equal(null, err);
-      db.collection('users').find({ email }).toArray(function (err, result) {
+      db.collection('users').find({ email }).toArray(function(err, result) {
         // The user which matches should be the only item in the result toArray
         assert.ok(result.length === 1);
         let userObject = result[0];
 
         // If our user is authenticated successfully, generate a token and respond with it
-        bcrypt.compare(password, userObject.password, function(err, compResult){
+        bcrypt.compare(password, userObject.password, function(err, compResult) {
           if (compResult === true) {
             let token = jwt.sign(userObject, app.get('uberSecret'), {
               expiresIn: '1d'
@@ -97,14 +97,14 @@ app.post('/login', function(req, res) {
       res.json({ message: 'lol nice tri n00b' });
     }
   }
-});
+}); // End route POST /login
 
 app.post('/newUser', function(req, res) {
   // Destructure new user fields from request body into individual variables
   let {firstName, lastName, streetAddress, city, state, email, password} = req.body;
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
-    db.collection('users').count({ email }, function (err, count) {
+    db.collection('users').count({ email }, function(err, count) {
       if (count !== 0) {
         res.json({status: 'bad', message: 'This email adress is already registered to a user.'});
         db.close();
@@ -118,8 +118,8 @@ app.post('/newUser', function(req, res) {
         console.log(email);
         console.log(new Date());
 
-        bcrypt.genSalt(config.saltRounds, function(err, salt){
-          bcrypt.hash(password, salt, function(err, hash){
+        bcrypt.genSalt(config.saltRounds, function(err, salt) {
+          bcrypt.hash(password, salt, function(err, hash) {
             assert.equal(null, err);
             db.collection('users').insertOne({
               firstName,
@@ -147,7 +147,7 @@ app.post('/newUser', function(req, res) {
 // Protected API Routes (on '/api/')
 //-----
 
-app.post('/usageEvent', function(req, res) { // Temporarily on /, not /api, because token auth on the meter isn't working yet 
+app.post('/usageEvent', function(req, res) { // Temporarily on /, not /api, because token auth on the meter isn't working yet
   // Destructure new usage event fields from request body into individual variables
   let {meterId, startTime, duration, totalVolume, email} = req.body;
 
@@ -158,17 +158,14 @@ app.post('/usageEvent', function(req, res) { // Temporarily on /, not /api, beca
   console.log(totalVolume);
   console.log(meterId);
   console.log(email);
-  let dateObj = Date.now();
-  dateObj -= (120000 + parseInt(duration));
-  let trueStartTime = new Date(dateObj);
-  console.log(trueStartTime);
+  let trueStartTime = new Date(new Date().valueOf() - (120000 + Number(duration)));
 
   res.send('New usage event logged');
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
     db.collection('events').insertOne({
       meterId,
-      'startTime': trueStartTime,
+      startTime: trueStartTime,
       totalVolume,
       duration,
       email
@@ -180,58 +177,122 @@ app.post('/usageEvent', function(req, res) { // Temporarily on /, not /api, beca
   });
 });
 
-
 apiRoutes.post('/addMeter', function(req, res) {
   console.log(req);
   res.send('You sent a usageEvent to Express');
-  let numMeters = 0;
-
-  let meterName = req.body.meterName;
-  let userEmail = req.body.userEmail;
-  MongoClient.connect(config.database, function(err, db) {
-    assert.equal(null, err);
-    db.collection('meters').find({email: userEmail}).toArray(function (err, result) {
-      numMeters = result.length;
-    });
-  });
-
-  let meterId = numMeters + 1;
+  let {meterName, userEmail} = req.body;
 
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
-    db.collection('meters').insertOne({
-      meterId,
-      meterName,
-      userEmail
-    }, function(err, result) {
-      assert.equal(err, null);
-      console.log('Inserted meter into db');
-      db.close();
-    });
-  });
+    db.collection('meters').find({email: userEmail}).toArray(function(err, result) {
+      let meterId = result.length + 1;
 
-  console.log('\n\n-------------------------');
-  console.log('New Meter Added!');
-  console.log(meterId);
-  console.log(meterName);
-  console.log(userEmail);
-  console.log(new Date());
-  res.send('New Meter Added');
-});
+      db.collection('meters').insertOne({
+        meterId,
+        meterName,
+        userEmail
+      }, function(err, result) {
+        assert.equal(err, null);
+        console.log('\n\n-------------------------');
+        console.log('New Meter Added!');
+        console.log(meterId);
+        console.log(meterName);
+        console.log(userEmail);
+        console.log(new Date());
+        res.send('New Meter Added');
+        db.close();
+      }); // End insertOne() for the meter
+
+    }); // End find() for the user's meters
+  }); // End MongoClient connection
+}); // End route POST /addMeter
+
 
 apiRoutes.get('/getUsageEvent', function(req, res) {
-  let email = req.param('email');
+  let {email, meterId, startTime, endTime} = req.query;
+  res.send( getUsageEvents(email, meterId, startTime, endTime) );
+}); // End route GET /getUsageEvent
+
+apiRoutes.get('/getDailyUsage', function(req, res) {
+  let {email, meterId, date} = req.query;
+
+  let startTime = new Date(date);
+  startTime.setHours(0,0,0,0);
+
+  let endTime = new Date(startTime);
+  endTime.setDate(endTime.getDate() + 1);
+
+  res.send( getUsageEvents(email, meterId, startTime, endTime) );
+}); // End route GET /getDailyUsage
+
+apiRoutes.get('/getWeeklyUsage', function(req, res) {
+  let {email, meterId, date} = req.query;
+
+  let endTime = new Date(date);
+  endTime.setHours(0,0,0,0);
+
+  let startTime = new Date(endTime.valueOf() - 604800000);
+
+  res.send( getUsageEvents(email, meterId, startTime, endTime) );
+}); // End route GET /getWeeklyUsage
+
+apiRoutes.get('/getMonthlyUsage', function(req, res) {
+  let {email, meterId, year} = req.query;
+
+  let endTime = new Date(year,0,0,0,0,0,0);
+  let startTime = new Date(endTime);
+  endTime.setFullYear(startTime.getFullYear() - 1);
+
+  res.send( getUsageEvents(email, meterId, startTime, endTime) );
+}); // End route GET /getMonthlyUsage
+
+
+//-----
+// Helper Methods
+//-----
+function getUsageEvents(email, meterId, startTime, endTime) {
+  let useTimes = (typeof startTime !== 'undefined' && typeof endTime !== 'undefined');
+  if (useTimes) {
+    startTime = new Date(startTime);
+    endTime = new Date(endTime);
+  }
+  assert.notEqual(null, email);
 
   console.log('\n\n-------------------------');
   console.log(`Usage event for ${email} pulled`);
 
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
-    db.collection('events').find({ email }).toArray(function(err, result) {
-      res.send(result[0]);
-    });
-  });
-});
+    // Construct a query that finds relevant usage events
+    let query = (useTimes) ? { // If we're using time restrictions...
+      email,
+      $and: [ // ...then include all events with startTime between our start and end times...
+        {startTime: {$gte: startTime}},
+        {startTime: {$lt: endTime}}
+      ]
+    } : { email }; // ...otherwise exclude startTime and endTime from the query
+    if (typeof meterId !== 'undefined' && meterId !== null) {
+      query.meterId = meterId;
+    }
+
+    let results = [];
+    db.collection('events').find(query).forEach(function(event) {
+      // Iterator callback - called once for each event found
+      let eventIsInRange = (useTimes) ? ( // If we're using time restrictions...
+        event.startTime >= startTime - event.duration/2 && // ...then ensure that at least half of the
+        event.endTime >= startTime + event.duration/2 &&   // event's time was spent during our range...
+        event.endTime - endTime <= event.duration/2
+      ) : true; // ...otherwise always include the event in our range
+
+      if (eventIsInRange) {
+        results.push(event);
+      }
+    }, function(err) {
+      // End callback - called once after iteration is complete
+      return (results.length > 0) ? results : {status: 'bad', message: 'No data found for given parameters.'};
+    }); // End find() query
+  }); //End MongoClient connection
+}
 
 
 //-----
