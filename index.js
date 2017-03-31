@@ -225,8 +225,8 @@ apiRoutes.get('/getDailyUsage', function(req, res) {
   endTime.setDate(endTime.getDate() + 1);
 
   // Use helper method getUsageEvents to query the database for usage events
-  let events = getUsageEvents(email, meterId, startTime, endTime);
-  console.log(`${Array.isArray(events) ? 'array' : typeof events} events[${events.length}]: ${events}`);
+  let events = getUsageEvents(email, meterId);//, startTime, endTime);
+  console.log(`${typeof events} events: ${events}`);
   // If the query is successful, getUsageEvents returns an array
   if (Array.isArray(events)) {
     // Create an array that will contain the hourly metrics (aggregate from usage events)
