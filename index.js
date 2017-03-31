@@ -224,57 +224,61 @@ apiRoutes.get('/getDailyUsage', function(req, res) {
   let endTime = new Date(startTime);
   endTime.setDate(endTime.getDate() + 1);
 
-  // Use helper method getUsageEvents to query the database for usage events
-  let events = getUsageEvents(email, meterId, startTime, endTime);
-  // If the query is successful, getUsageEvents returns an array
-  if (Array.isArray(events)) {
-    // Create an array that will contain the hourly metrics (aggregate from usage events)
-    let hourlyData = []; // TEMP: 0 is 8am, 12 is 8pm
+  // Use helper method getUsageEvents to query the database for usage events (returns a Promise)
+  getUsageEvents(email, meterId, startTime, endTime).then((events) => {
+    // This function is called if the Promise is resolved.
+    // If the query is successful, it resolves with an array
+    if (Array.isArray(events)) {
+      // Create an array that will contain the hourly metrics (aggregate from usage events)
+      let hourlyData = []; // TEMP: 0 is 8am, 12 is 8pm
 
-    // Iterate through the events found in the database
-    for (let i = 0; i < events.length; i++) {
-      // Destructure the current object into named variables that are easier to use
-      let {startTime: eventTime, duration, totalVolume} = events[i];
-      // Calculate the hour at which the current event begins
-      eventTime = new Date(eventTime);
-      let eventHour = eventTime.getHours();
-      if (eventHour < 8 || eventHour > 20) {
-        // TEMP: Only accept event start times between 8am and 8pm
-        continue;
-      } else {
-        // TEMP: Subtract 8 so that eventHour=0 matches up with hourlyData[0] at 8am
-        eventHour -= 8;
-      }
-
-      // Handle events which span multiple hour-slots
-      do {
-        // Calculate milliseconds from the event start time to the next hour-slot
-        let millisToNextHour = (60 - eventTime.getMinutes()) * 60000;
-        // If our duration extends into the next hour slot...
-        if (duration > millisToNextHour) {
-          // ...then add the percentage of totalVolume which occurred during this hour-slot...
-          hourlyData[eventHour] += totalVolume * millisToNextHour / duration;
-          // ...decrement the event's remaining duration by this hour-slot's time...
-          duration -= millisToNextHour;
-          // ...and then advance the counter to the next hour-slot...
-          eventHour++;
+      // Iterate through the events found in the database
+      for (let i = 0; i < events.length; i++) {
+        // Destructure the current object into named variables that are easier to use
+        let {startTime: eventTime, duration, totalVolume} = events[i];
+        // Calculate the hour at which the current event begins
+        eventTime = new Date(eventTime);
+        let eventHour = eventTime.getHours();
+        if (eventHour < 8 || eventHour > 20) {
+          // TEMP: Only accept event start times between 8am and 8pm
+          continue;
         } else {
-          // ...Otherwise, if our duration is completely contained in this hour-slot, then
-          // we can simply add the total volume to this hour and stop looping.
-          hourlyData[eventHour] += totalVolume;
-          break;
+          // TEMP: Subtract 8 so that eventHour=0 matches up with hourlyData[0] at 8am
+          eventHour -= 8;
         }
-      } while (eventHour < hourlyData.length); // If we reach the bound of our array, stop the loop
-    }
 
-    // If we reach this point, then we have the aggregated usage data in the hourlyData array.
-    // So, send the data array back to the user.
-    res.json({ status: 'ok', data: hourlyData });
-  } else {
-    // If the database query fails, getUsageEvents returns an error message object
-    // that we just send on back to the user
-    res.status(204).json(events);
-  }
+        // Handle events which span multiple hour-slots
+        do {
+          // Calculate milliseconds from the event start time to the next hour-slot
+          let millisToNextHour = (60 - eventTime.getMinutes()) * 60000;
+          // If our duration extends into the next hour slot...
+          if (duration > millisToNextHour) {
+            // ...then add the percentage of totalVolume which occurred during this hour-slot...
+            hourlyData[eventHour] += totalVolume * millisToNextHour / duration;
+            // ...decrement the event's remaining duration by this hour-slot's time...
+            duration -= millisToNextHour;
+            // ...and then advance the counter to the next hour-slot...
+            eventHour++;
+          } else {
+            // ...Otherwise, if our duration is completely contained in this hour-slot, then
+            // we can simply add the total volume to this hour and stop looping.
+            hourlyData[eventHour] += totalVolume;
+            break;
+          }
+        } while (eventHour < hourlyData.length); // If we reach the bound of our array, stop the loop
+      }
+      // If we reach this point, then we have the aggregated usage data in the hourlyData array.
+      // So, send the data array back to the user.
+      res.send({ status: 'ok', data: hourlyData });
+    } else {
+      // If the database Promise resolves empty, getUsageEvents returns an error message
+      // object that we just send on back to the user
+      res.status(204).send(events);
+    }
+  }, (err) => {
+    // This function is called if the Promise is rejected. Alert the user.
+    res.status(500).send({ status: 'bad', message: err });
+  });
 }); // End route GET /getDailyUsage
 
 apiRoutes.get('/getWeeklyUsage', function(req, res) {
@@ -304,40 +308,45 @@ apiRoutes.get('/getMonthlyUsage', function(req, res) {
 //-----
 
 function getUsageEvents(email, meterId, startTime, endTime) {
-  let useTimes = (typeof startTime !== 'undefined' && typeof endTime !== 'undefined');
-  if (useTimes) {
-    startTime = new Date(startTime);
-    endTime = new Date(endTime);
-  }
-  assert.notEqual(null, email);
-
-  console.log('\n\n-------------------------');
-  console.log(`Usage event for ${email} pulled`);
-
-  MongoClient.connect(config.database, function(err, db) {
-    assert.equal(null, err);
-    // Construct a query that finds relevant usage events
-    let query = (useTimes) ? { // If we're using time restrictions...
-      email,
-      $and: [ // ...then include all events with startTime between our start and end times...
-        {startTime: {$gte: startTime}},
-        {startTime: {$lt: endTime}}
-      ]
-    } : { email }; // ...otherwise exclude startTime and endTime from the query
-    if (typeof meterId !== 'undefined' && meterId !== null) {
-      query.meterId = parseInt(meterId);
+  return new Promise((resolve, reject) => {
+    let useTimes = (typeof startTime !== 'undefined' && typeof endTime !== 'undefined');
+    if (useTimes) {
+      startTime = new Date(startTime);
+      endTime = new Date(endTime);
     }
+    assert.notEqual(null, email);
 
-    let results = [];
-    db.collection('events').find(query).forEach(function(event) {
-      // Iterator callback - called once for each event found
-      results.push(event);
-    }, function(err) {
+    console.log('\n\n-------------------------');
+    console.log(`Usage event for ${email} pulled`);
+
+    MongoClient.connect(config.database, function(err, db) {
       assert.equal(null, err);
-      // End callback - called once after iteration is complete
-      return (results.length > 0) ? results : {status: 'bad', message: 'No data found for given parameters.'};
-    }); // End find() query
-  }); //End MongoClient connection
+      // Construct a query that finds relevant usage events
+      let query = (useTimes) ? { // If we're using time restrictions...
+        email,
+        $and: [ // ...then include all events with startTime between our start and end times...
+          {startTime: {$gte: startTime}},
+          {startTime: {$lt: endTime}}
+        ]
+      } : { email }; // ...otherwise exclude startTime and endTime from the query
+      if (typeof meterId !== 'undefined' && meterId !== null) {
+        query.meterId = parseInt(meterId);
+      }
+
+      let results = [];
+      db.collection('events').find(query).forEach(function(event) {
+        // Iterator callback - called once for each event found
+        results.push(event);
+      }, function(err) {
+        // End callback - called once after iteration is complete
+        if (err !== null) {
+          reject(err); // Reject the promise, passing the error message
+        }
+        // Resolve the promise, returning the results
+        resolve(results.length > 0) ? results : {status: 'bad', message: 'No data found for given parameters.'};
+      }); // End find() query
+    }); //End MongoClient connection
+  });
 }
 
 
