@@ -231,12 +231,13 @@ apiRoutes.get('/getDailyUsage', function(req, res) {
     if (Array.isArray(events)) {
       // Create an array that will contain the hourly metrics (aggregate from usage events)
       // TEMP: 0 is 12am, 12 is 12pm
-      let hourlyData = [0,0,0,0,0,0,0,0,0,0,0,0];
+      let hourlyData = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 
       // Iterate through the events found in the database
       for (let i = 0; i < events.length; i++) {
         // Destructure the current object into named variables that are easier to use
         let {startTime: eventTime, duration, totalVolume} = events[i];
+        console.log(`events[${i}]: ${eventTime}, ${duration}, ${totalVolume}`);
         // Calculate the hour at which the current event begins
         eventTime = new Date(eventTime);
         let eventHour = eventTime.getHours();
