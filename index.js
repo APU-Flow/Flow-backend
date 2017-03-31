@@ -230,7 +230,8 @@ apiRoutes.get('/getDailyUsage', function(req, res) {
     // If the query is successful, it resolves with an array
     if (Array.isArray(events)) {
       // Create an array that will contain the hourly metrics (aggregate from usage events)
-      let hourlyData = []; // TEMP: 0 is 12am, 12 is 12pm
+      // TEMP: 0 is 12am, 12 is 12pm
+      let hourlyData = [0,0,0,0,0,0,0,0,0,0,0,0];
 
       // Iterate through the events found in the database
       for (let i = 0; i < events.length; i++) {
