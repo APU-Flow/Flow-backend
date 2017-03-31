@@ -326,7 +326,7 @@ function getUsageEvents(email, meterId, startTime, endTime) {
       ]
     } : { email }; // ...otherwise exclude startTime and endTime from the query
     if (typeof meterId !== 'undefined' && meterId !== null) {
-      query.meterId = meterId;
+      query.meterId = parseInt(meterId);
     }
 
     let results = [];
@@ -334,22 +334,12 @@ function getUsageEvents(email, meterId, startTime, endTime) {
     console.log(query.$and);
     db.collection('events').find(query).forEach(function(event) {
       // Iterator callback - called once for each event found
-      let eventIsInRange = (useTimes) ? ( // If we're using time restrictions...
-        event.startTime >= startTime - event.duration/2 && // ...then ensure that at least half of the
-        event.endTime >= startTime + event.duration/2 &&   // event's time was spent during our range...
-        event.endTime - endTime <= event.duration/2
-      ) : true; // ...otherwise always include the event in our range
-
-      if (eventIsInRange) {
-        results.push(event);
-      }
+      results.push(event);
     }, function(err) {
       assert.equal(null, err);
       // End callback - called once after iteration is complete
       console.log(`${Array.isArray(results) ? 'array' : typeof results} results[${results.length}]: ${results}`);
-      let ret = (results.length > 0) ? results : {status: 'bad', message: 'No data found for given parameters.'};
-      console.log(ret);
-      return ret;
+      return (results.length > 0) ? results : {status: 'bad', message: 'No data found for given parameters.'};
     }); // End find() query
   }); //End MongoClient connection
 }
