@@ -343,7 +343,7 @@ function getUsageEvents(email, meterId, startTime, endTime) {
           reject(err); // Reject the promise, passing the error message
         }
         // Resolve the promise, returning the results
-        resolve(results.length > 0) ? results : {status: 'bad', message: 'No data found for given parameters.'};
+        resolve((results.length > 0) ? results : {status: 'bad', message: 'No data found for given parameters.'});
       }); // End find() query
     }); //End MongoClient connection
   });
