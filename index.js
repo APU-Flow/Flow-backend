@@ -230,17 +230,20 @@ apiRoutes.get('/getDailyUsage', function(req, res) {
     // If the query is successful, it resolves with an array
     if (Array.isArray(events)) {
       // Create an array that will contain the hourly metrics (aggregate from usage events)
-      // TEMP: 0 is 12am, 12 is 12pm
-      let hourlyData = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+      // TEMP: 0 is 8am, 12 is 8pm
+      let hourlyData = [0,0,0,0,0,0,0,0,0,0,0,0];
 
       // Iterate through the events found in the database
       for (let i = 0; i < events.length; i++) {
         // Destructure the current object into named variables that are easier to use
         let {startTime: eventTime, duration, totalVolume} = events[i];
-        console.log(`events[${i}]: ${eventTime}, ${duration}, ${totalVolume}`);
         // Calculate the hour at which the current event begins
         eventTime = new Date(eventTime);
         let eventHour = eventTime.getHours();
+        if (eventHour < 8 || eventHour > 20) {
+          continue;
+        }
+        eventHour -= 8; // TEMP Only take hours 8am-8pm, and offset so that 8am is index 0
 
         // Handle events which span multiple hour-slots
         do {
