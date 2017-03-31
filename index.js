@@ -226,7 +226,7 @@ apiRoutes.get('/getDailyUsage', function(req, res) {
 
   // Use helper method getUsageEvents to query the database for usage events
   let events = getUsageEvents(email, meterId, startTime, endTime);
-
+  console.log(`${Array.isArray(events) ? 'array' : typeof events} events[${events.length}]: ${events}`);
   // If the query is successful, getUsageEvents returns an array
   if (Array.isArray(events)) {
     // Create an array that will contain the hourly metrics (aggregate from usage events)
@@ -270,11 +270,11 @@ apiRoutes.get('/getDailyUsage', function(req, res) {
 
     // If we reach this point, then we have the aggregated usage data in the hourlyData array.
     // So, send the data array back to the user.
-    res.send({ status: 'ok', data: hourlyData });
+    res.json({ status: 'ok', data: hourlyData });
   } else {
     // If the database query fails, getUsageEvents returns an error message object
     // that we just send on back to the user
-    res.send(events);
+    res.status(204).json(events);
   }
 }); // End route GET /getDailyUsage
 
@@ -343,6 +343,7 @@ function getUsageEvents(email, meterId, startTime, endTime) {
       }
     }, function(err) {
       // End callback - called once after iteration is complete
+      console.log(`${Array.isArray(results) ? 'array' : typeof results} results[${results.length}]: ${results}`);
       return (results.length > 0) ? results : {status: 'bad', message: 'No data found for given parameters.'};
     }); // End find() query
   }); //End MongoClient connection
