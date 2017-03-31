@@ -225,12 +225,12 @@ apiRoutes.get('/getDailyUsage', function(req, res) {
   endTime.setDate(endTime.getDate() + 1);
 
   // Use helper method getUsageEvents to query the database for usage events (returns a Promise)
-  getUsageEvents(email, meterId, startTime, endTime).then((events) => {
+  getUsageEvents(email, meterId/* TEMP , startTime, endTime*/).then((events) => {
     // This function is called if the Promise is resolved.
     // If the query is successful, it resolves with an array
     if (Array.isArray(events)) {
       // Create an array that will contain the hourly metrics (aggregate from usage events)
-      let hourlyData = []; // TEMP: 0 is 8am, 12 is 8pm
+      let hourlyData = []; // TEMP: 0 is 12am, 12 is 12pm
 
       // Iterate through the events found in the database
       for (let i = 0; i < events.length; i++) {
@@ -239,13 +239,6 @@ apiRoutes.get('/getDailyUsage', function(req, res) {
         // Calculate the hour at which the current event begins
         eventTime = new Date(eventTime);
         let eventHour = eventTime.getHours();
-        if (eventHour < 8 || eventHour > 20) {
-          // TEMP: Only accept event start times between 8am and 8pm
-          continue;
-        } else {
-          // TEMP: Subtract 8 so that eventHour=0 matches up with hourlyData[0] at 8am
-          eventHour -= 8;
-        }
 
         // Handle events which span multiple hour-slots
         do {
@@ -334,7 +327,6 @@ function getUsageEvents(email, meterId, startTime, endTime) {
       }
 
       let results = [];
-      console.log(query);
       db.collection('events').find(query).forEach(function(event) {
         // Iterator callback - called once for each event found
         results.push(event);
