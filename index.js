@@ -277,7 +277,7 @@ apiRoutes.get('/getDailyUsage', function(req, res) {
     }
   }, (err) => {
     // This function is called if the Promise is rejected. Alert the user.
-    res.status(500).send({ status: 'bad', message: err });
+    res.status(500).send(err);
   });
 }); // End route GET /getDailyUsage
 
@@ -334,6 +334,7 @@ function getUsageEvents(email, meterId, startTime, endTime) {
       }
 
       let results = [];
+      console.log(query);
       db.collection('events').find(query).forEach(function(event) {
         // Iterator callback - called once for each event found
         results.push(event);
@@ -343,7 +344,11 @@ function getUsageEvents(email, meterId, startTime, endTime) {
           reject(err); // Reject the promise, passing the error message
         }
         // Resolve the promise, returning the results
-        resolve((results.length > 0) ? results : {status: 'bad', message: 'No data found for given parameters.'});
+        if (results.length > 0) {
+          resolve(results);
+        } else {
+          reject({status: 'bad', message: 'No data found for given parameters.'});
+        }
       }); // End find() query
     }); //End MongoClient connection
   });
