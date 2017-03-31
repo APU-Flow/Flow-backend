@@ -330,6 +330,8 @@ function getUsageEvents(email, meterId, startTime, endTime) {
     }
 
     let results = [];
+    console.log(query);
+    console.log(query.$and);
     db.collection('events').find(query).forEach(function(event) {
       // Iterator callback - called once for each event found
       let eventIsInRange = (useTimes) ? ( // If we're using time restrictions...
@@ -342,9 +344,12 @@ function getUsageEvents(email, meterId, startTime, endTime) {
         results.push(event);
       }
     }, function(err) {
+      assert.equal(null, err);
       // End callback - called once after iteration is complete
       console.log(`${Array.isArray(results) ? 'array' : typeof results} results[${results.length}]: ${results}`);
-      return (results.length > 0) ? results : {status: 'bad', message: 'No data found for given parameters.'};
+      let ret = (results.length > 0) ? results : {status: 'bad', message: 'No data found for given parameters.'};
+      console.log(ret);
+      return ret;
     }); // End find() query
   }); //End MongoClient connection
 }
