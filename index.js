@@ -65,7 +65,7 @@ app.post('/login', function(req, res) {
       assert.equal(null, err);
       db.collection('users').find({ email }).toArray(function(err, result) {
         // The user which matches should be the only item in the result toArray
-        assert.ok(result.length === 1);
+        //assert.ok(result.length === 1);
         let userObject = result[0];
 
         // If our user is authenticated successfully, generate a token and respond with it
