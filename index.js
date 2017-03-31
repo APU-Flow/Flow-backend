@@ -269,11 +269,11 @@ apiRoutes.get('/getDailyUsage', function(req, res) {
       }
       // If we reach this point, then we have the aggregated usage data in the hourlyData array.
       // So, send the data array back to the user.
-      res.send({ status: 'ok', data: hourlyData });
+      res.json({ status: 'ok', data: hourlyData });
     } else {
       // If the database Promise resolves empty, getUsageEvents returns an error message
       // object that we just send on back to the user
-      res.status(204).send(events);
+      res.status(204).json(events);
     }
   }, (err) => {
     // This function is called if the Promise is rejected. Alert the user.
