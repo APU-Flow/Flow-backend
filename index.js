@@ -210,7 +210,7 @@ apiRoutes.post('/addMeter', function(req, res) {
 
 apiRoutes.get('/getUsageEvent', function(req, res) {
   let {email, meterId, startTime, endTime} = req.query;
-  res.send( getUsageEvents(email, meterId, startTime, endTime) );
+  res.send( getUsageEvents(email, meterId/*, startTime, endTime*/) );
 }); // End route GET /getUsageEvent
 
 apiRoutes.get('/getDailyUsage', function(req, res) {
