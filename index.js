@@ -158,17 +158,14 @@ app.post('/usageEvent', function(req, res) { // Temporarily on /, not /api, beca
   console.log(totalVolume);
   console.log(meterId);
   console.log(email);
-  let dateObj = Date.now();
-  dateObj -= (120000 + parseInt(duration));
-  startTime = new Date(dateObj);
-  console.log(startTime);
+  let trueStartTime = new Date(new Date().valueOf() - (120000 + Number(duration)));
 
   res.send('New usage event logged');
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
     db.collection('events').insertOne({
       meterId,
-      startTime,
+      startTime: trueStartTime,
       totalVolume,
       duration,
       email
