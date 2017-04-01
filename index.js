@@ -65,7 +65,7 @@ app.post('/login', function(req, res) {
   try {
     MongoClient.connect(config.database, function(err, db) {
       assert.equal(null, err);
-      db.collection('users').find({ email }).toArray(function (err, result) {
+      db.collection('users').find({ 'email': { $regex : new RegExp(email, 'i') } }).toArray(function (err, result) {
         // The user which matches should be the only item in the result toArray
         assert.ok(result.length === 1);
         let userObject = result[0];
