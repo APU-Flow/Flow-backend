@@ -1,24 +1,22 @@
 'use strict';
 // index.js
 // Flow Backend server
-let express = require('express');
-let app = express();
-let port = 3000;
-let MongoClient = require('mongodb').MongoClient;
-let assert = require('assert');
-let bodyParser = require('body-parser');
-let jwt = require('jsonwebtoken');
-let bcrypt  = require('bcrypt');
-const saltRounds = 10;
+const express = require('express');
+const app = express();
+const MongoClient = require('mongodb').MongoClient;
+const assert = require('assert');
+const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+const bcrypt  = require('bcrypt');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-let config = require('./config');     // Get our config file
+const config = require('./config');     // Get our config file
 app.set('uberSecret', config.secret); // Set the secret value used for JWTs
 
 // Configure a special Router for /api/ routes with middleware for JWT auth
-let apiRoutes = express.Router();
+const apiRoutes = express.Router();
 app.use('/api', apiRoutes);
 apiRoutes.use(function(req, res, next) {
 
@@ -121,7 +119,7 @@ app.post('/newUser', function(req, res) {
         console.log(email);
         console.log(new Date());
 
-        bcrypt.genSalt(saltRounds, function(err, salt) {
+        bcrypt.genSalt(config.saltRounds, function(err, salt) {
           bcrypt.hash(password, salt, function(err, hash) {
             assert.equal(null, err);
             db.collection('users').insertOne({
@@ -379,5 +377,5 @@ function getUsageEvents(email, meterId, startTime, endTime) {
 //-----
 // Fire up the server!
 //-----
-app.listen(port);
-console.log(`Flow-backend server running on port ${port}`);
+app.listen(config.port);
+console.log(`Flow-backend server running on port ${config.port}`);
