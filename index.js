@@ -102,6 +102,7 @@ app.post('/login', function(req, res) {
 app.post('/newUser', function(req, res) {
   // Destructure new user fields from request body into individual variables
   let {firstName, lastName, streetAddress, city, state, email, password} = req.body;
+  email = email.toLowerCase();
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
     db.collection('users').count({ email }, function(err, count) {
@@ -177,6 +178,7 @@ app.post('/usageEvent', function(req, res) { // Temporarily on /, not /api, beca
   });
 });
 
+
 apiRoutes.post('/addMeter', function(req, res) {
   console.log(req);
   res.send('You sent a usageEvent to Express');
@@ -184,8 +186,8 @@ apiRoutes.post('/addMeter', function(req, res) {
 
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
-    db.collection('meters').find({email: userEmail}).toArray(function(err, result) {
-      let meterId = result.length + 1;
+    db.collection('meters').count({email: userEmail}, function(err, count) {
+      let meterId = count + 1;
 
       db.collection('meters').insertOne({
         meterId,
@@ -193,17 +195,18 @@ apiRoutes.post('/addMeter', function(req, res) {
         userEmail
       }, function(err, result) {
         assert.equal(err, null);
+
         console.log('\n\n-------------------------');
         console.log('New Meter Added!');
         console.log(meterId);
         console.log(meterName);
         console.log(userEmail);
         console.log(new Date());
+
         res.send('New Meter Added');
         db.close();
       }); // End insertOne() for the meter
-
-    }); // End find() for the user's meters
+    }); // End count() for the user's meters
   }); // End MongoClient connection
 }); // End route POST /addMeter
 
