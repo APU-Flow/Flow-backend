@@ -65,7 +65,12 @@ app.post('/login', function(req, res) {
       assert.equal(null, err);
       db.collection('users').find({ email }).toArray(function(err, result) {
         // The user which matches should be the only item in the result toArray
-        //assert.ok(result.length === 1);
+        if (result.length !== 1) {
+          throw new Error((result.length === 0) ?
+            `No users found with email ${email}!`:
+            `Expected 0 or 1 users with email ${email}, found ${result.length}!`
+          );
+        }
         let userObject = result[0];
 
         // If our user is authenticated successfully, generate a token and respond with it
@@ -82,7 +87,7 @@ app.post('/login', function(req, res) {
               token
             });
           } else {
-            throw 'Password does not match.';
+            throw new Error('Password does not match.');
           }
         });
         console.log('Found in database:', result);
@@ -94,7 +99,8 @@ app.post('/login', function(req, res) {
       throw e;
     } else {
       // If the authentication fails, respond with an appropriate message
-      res.json({ message: 'lol nice tri n00b' });
+      console.error(e);
+      res.json({ message: `${e.name}: ${e.message}` });
     }
   }
 }); // End route POST /login
@@ -213,7 +219,7 @@ apiRoutes.post('/addMeter', function(req, res) {
 
 apiRoutes.get('/getUsageEvent', function(req, res) {
   let {email, meterId, startTime, endTime} = req.query;
-  res.send( getUsageEvents(email, meterId/*, startTime, endTime*/) );
+  res.send( getUsageEvents(email, meterId, startTime, endTime) );
 }); // End route GET /getUsageEvent
 
 apiRoutes.get('/getDailyUsage', function(req, res) {
@@ -228,7 +234,7 @@ apiRoutes.get('/getDailyUsage', function(req, res) {
   endTime.setDate(endTime.getDate() + 1);
 
   // Use helper method getUsageEvents to query the database for usage events (returns a Promise)
-  getUsageEvents(email, meterId/* TEMP , startTime, endTime*/).then((events) => {
+  getUsageEvents(email, meterId, startTime, endTime).then((events) => {
     // This function is called if the Promise is resolved.
     // If the query is successful, it resolves with an array
     if (Array.isArray(events)) {
