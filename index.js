@@ -304,6 +304,33 @@ apiRoutes.get('/getMonthlyUsage', function(req, res) {
 }); // End route GET /getMonthlyUsage
 
 
+apiRoutes.get('/deleteUserData', function(req, res) {
+  let email = req.decoded.email;
+
+  MongoClient.connect(config.database, function(err, db) {
+    assert.equal(null, err);
+    db.collection('events').remove({email}, function(err, result) {
+      console.log();
+      console.log('___________________');
+      console.log('Event data for user ' + email + ' deleted');
+      console.log(new Date().toLocalString());
+      console.log('___________________');
+      console.log(result);
+    });
+  });
+});
+
+apiRoutes.get('/getMonthlyUsage', function(req, res) {
+  let {email, meterId, year} = req.query;
+
+  let endTime = new Date(year,0,0,0,0,0,0);
+  let startTime = new Date(endTime);
+  endTime.setFullYear(startTime.getFullYear() - 1);
+
+  res.send( getUsageEvents(email, meterId, startTime, endTime) );
+}); // End route GET /getMonthlyUsage
+
+
 //-----
 // Helper Methods
 //-----
