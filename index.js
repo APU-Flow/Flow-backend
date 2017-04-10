@@ -424,16 +424,6 @@ apiRoutes.get('/deleteUserData', function(req, res) {
   });
 });
 
-apiRoutes.get('/getMonthlyUsage', function(req, res) {
-  let {email, meterId, year} = req.query;
-
-  let endTime = new Date(year,0,0,0,0,0,0);
-  let startTime = new Date(endTime);
-  endTime.setFullYear(startTime.getFullYear() - 1);
-
-  res.send( getUsageEvents(email, meterId, startTime, endTime) );
-}); // End route GET /getMonthlyUsage
-
 
 //-----
 // Helper Methods
