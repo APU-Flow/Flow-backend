@@ -407,6 +407,24 @@ apiRoutes.get('/getMonthlyUsage', function(req, res) {
 }); // End route GET /getMonthlyUsage
 
 
+apiRoutes.get('/deleteUserData', function(req, res) {
+  let email = req.decoded.email;
+
+  MongoClient.connect(config.database, function(err, db) {
+    assert.equal(null, err);
+    db.collection('events').remove({email}, function(err, result) {
+      console.log();
+      console.log('___________________');
+      console.log('Event data for user ' + email + ' deleted');
+      console.log(new Date().toLocalString());
+      console.log('___________________');
+      console.log(result);
+    });
+    res.send({message: 'You have deleted your data, please email us with your name so we can sue you for leaving Flow. Thank you.'});
+  });
+});
+
+
 //-----
 // Helper Methods
 //-----
