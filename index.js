@@ -317,6 +317,7 @@ apiRoutes.get('/deleteUserData', function(req, res) {
       console.log('___________________');
       console.log(result);
     });
+    res.send({message: 'You have deleted your data, please email us with your name so we can sue you for leaving Flow. Thank you.'});
   });
 });
 
