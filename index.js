@@ -12,8 +12,8 @@ const bcrypt  = require('bcrypt');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-const config = require('./config');     // Get our config file
-app.set('uberSecret', config.secret); // Set the secret value used for JWTs
+const config = require('./config');    // Get our config file
+app.set('uberSecret', config.secret);  // Set the secret value used for JWTs
 
 // Configure a special Router for /api/ routes with middleware for JWT auth
 const apiRoutes = express.Router();
@@ -55,6 +55,7 @@ app.post('/login', function(req, res) {
   res.setHeader('Content-Type', 'application/json');
   // Destructure login info from request body into individual variables
   let {email, password} = req.body;
+  email = email.toLowerCase();
 
   console.log('\n-------------------------');
   console.log(`The user ${email} attempted to log in`);
