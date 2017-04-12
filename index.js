@@ -204,7 +204,7 @@ apiRoutes.post('/addMeter', function(req, res) {
         console.log(email);
         console.log(new Date());
 
-        res.send('New Meter Added');
+        res.json({meterId, message: 'New meter added'});
         db.close();
       }); // End insertOne() for the meter
     }); // End count() for the user's meters
