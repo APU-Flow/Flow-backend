@@ -178,24 +178,39 @@ app.post('/usageEvent', function(req, res) { // Temporarily on /, not /api, beca
   });
 });
 
+apiRoutes.get('/getNextMeterId', function(req, res) {
+  let {email} = req.decoded;
+  MongoClient.connect(config.database, function(err, db) {
+    assert.equal(null, err);
+    db.collection('meters').count({email}, function(err2, count) {
+      assert.equal(null, err2);
+      req.json({nextId: count+1});
+    });
+  });
+});
 
 apiRoutes.post('/addMeter', function(req, res) {
   console.log(req);
   res.send('You sent a usageEvent to Express');
-  let {meterName} = req.body;
+  let {meterId, meterName} = req.body;
   let {email} = req.decoded;
 
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
-    db.collection('meters').count({email}, function(err, count) {
-      let meterId = count + 1;
+    db.collection('meters').count({email}, function(err2, count) {
+      assert.equal(null, err2);
+      if (meterId !== count+1) {
+        res.status(409).json({message: 'Invalid Meter ID - request a new ID and try again.', nextId: count+1});
+        db.close();
+        return;
+      }
 
       db.collection('meters').insertOne({
         meterId,
         meterName,
         email
-      }, function(err, result) {
-        assert.equal(err, null);
+      }, function(err3, result) {
+        assert.equal(err3, null);
 
         console.log('\n-------------------------');
         console.log('New Meter Added!');
@@ -204,7 +219,7 @@ apiRoutes.post('/addMeter', function(req, res) {
         console.log(email);
         console.log(new Date());
 
-        res.json({meterId, message: 'New meter added'});
+        res.json({message: 'New meter added'});
         db.close();
       }); // End insertOne() for the meter
     }); // End count() for the user's meters
@@ -449,7 +464,7 @@ function getUsageEvents(email, meterId, startTime, endTime) {
         if (results.length > 0) {
           resolve(results);
         } else {
-          reject({message: 'No data found for given parameters.'});
+          resolve({message: 'No data found for given parameters.'});
         }
       }); // End find() query
     }); //End MongoClient connection
