@@ -191,7 +191,7 @@ apiRoutes.get('/getMeterIdList', function(req, res) {
   let {email} = req.decoded;
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
-    db.collection('meters').find({email}).toArray(function(err2, results) {
+    db.collection('meters').find({email}).project({meterId: true}).toArray(function(err2, results) {
       assert.equal(null, err2);
       if (results.length > 0) {
         res.json({meterIds: results});
