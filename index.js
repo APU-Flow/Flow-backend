@@ -52,7 +52,6 @@ apiRoutes.use(function(req, res, next) {
 //-----
 
 app.post('/login', function(req, res) {
-  res.setHeader('Content-Type', 'application/json');
   // Destructure login info from request body into individual variables
   let {email, password} = req.body;
   email = email.toLowerCase();
@@ -160,7 +159,7 @@ app.post('/usageEvent', function(req, res) { // Temporarily on /, not /api, beca
   let trueStartTime = new Date(new Date().valueOf() - (120000 + Number(duration)));
   console.log(trueStartTime);
 
-  res.send('New usage event logged');
+  res.json({message: 'New usage event logged'});
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
     db.collection('events').insertOne({
@@ -177,22 +176,37 @@ app.post('/usageEvent', function(req, res) { // Temporarily on /, not /api, beca
   });
 });
 
+apiRoutes.get('/getNextMeterId', function(req, res) {
+  let {email} = req.decoded;
+  MongoClient.connect(config.database, function(err, db) {
+    assert.equal(null, err);
+    db.collection('meters').count({email}, function(err2, count) {
+      assert.equal(null, err2);
+      req.json({nextId: count+1});
+    });
+  });
+});
 
 apiRoutes.post('/addMeter', function(req, res) {
-  let {meterName} = req.body;
+  let {meterId, meterName} = req.body;
   let {email} = req.decoded;
 
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
-    db.collection('meters').count({email}, function(err, count) {
-      let meterId = count + 1;
+    db.collection('meters').count({email}, function(err2, count) {
+      assert.equal(null, err2);
+      if (meterId !== count+1) {
+        res.status(409).json({message: 'Invalid Meter ID - request a new ID and try again.', nextId: count+1});
+        db.close();
+        return;
+      }
 
       db.collection('meters').insertOne({
         meterId,
         meterName,
         email
-      }, function(err, result) {
-        assert.equal(err, null);
+      }, function(err3, result) {
+        assert.equal(err3, null);
 
         console.log('\n-------------------------');
         console.log(`New Meter Added for user ${email}!`);
@@ -200,7 +214,7 @@ apiRoutes.post('/addMeter', function(req, res) {
         console.log(meterName);
         console.log(new Date());
 
-        res.json({meterId, message: 'New meter added'});
+        res.json({message: 'New meter added'});
         db.close();
       }); // End insertOne() for the meter
     }); // End count() for the user's meters
@@ -268,12 +282,12 @@ apiRoutes.get('/getDailyUsage', function(req, res) {
       res.json({data: hourlyData });
     } else {
       // If the database Promise resolves empty, getUsageEvents returns an error message
-      // object that we just send on back to the user
+      // JSON object that we just send on back to the user
       res.status(204).send(events);
     }
   }, (err) => {
     // This function is called if the Promise is rejected. Alert the user.
-    res.status(500).send(err);
+    res.status(500).json({message: err});
   });
 }); // End route GET /getDailyUsage
 
@@ -325,12 +339,12 @@ apiRoutes.get('/getWeeklyUsage', function(req, res) {
       res.json({data: weeklyData });
     } else {
       // If the database Promise resolves empty, getUsageEvents returns an error message
-      // object that we just send on back to the user
+      // JSON object that we just send on back to the user
       res.status(204).send(events);
     }
   }, (err) => {
     // This function is called if the Promise is rejected. Alert the user.
-    res.status(500).send(err);
+    res.status(500).json({message: err});
   });
 }); // End route GET /getWeeklyUsage
 
@@ -385,7 +399,7 @@ apiRoutes.get('/getMonthlyUsage', function(req, res) {
       db.close();
       if (err !== null) {
         // If there was a database error, send the error back to the client
-        res.status(500).send(err);
+        res.status(500).json({message: err});
       } else if (currentDay === null) {
         // If the currentDay variable was never modified, then no events were found
         res.status(204).json({message: 'No data found for given parameters.'});
@@ -459,7 +473,7 @@ function getUsageEvents(email, meterId, startTime, endTime) {
         if (results.length > 0) {
           resolve(results);
         } else {
-          reject({message: 'No data found for given parameters.'});
+          resolve({message: 'No data found for given parameters.'});
         }
       }); // End find() query
     }); //End MongoClient connection
