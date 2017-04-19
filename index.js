@@ -107,11 +107,11 @@ app.post('/newUser', function(req, res) {
     assert.equal(null, err);
     db.collection('users').count({ email }, function(err, count) {
       if (count !== 0) {
-        res.status(409).json({message: 'This email adress is already registered to a user.'});
+        res.status(409).json({message: `This email adress: ${email} is already registered to a user.`});
         db.close();
       } else {
         console.log('\n-------------------------');
-        console.log('New user registered');
+        console.log(`New user registered: ${email}`);
         console.log(firstName);
         console.log(lastName);
         console.log(city);
@@ -150,16 +150,15 @@ app.post('/newUser', function(req, res) {
 
 app.post('/usageEvent', function(req, res) { // Temporarily on /, not /api, because token auth on the meter isn't working yet
   // Destructure new usage event fields from request body into individual variables
-  let {meterId, startTime, duration, totalVolume, email} = req.body;
+  let {meterId, duration, totalVolume, email} = req.body;
 
   console.log('\n-------------------------');
-  console.log('New Usage Event logged!');
-  console.log(startTime);
+  console.log(`New Usage Event logged for ${email}!`);
   console.log(duration);
   console.log(totalVolume);
   console.log(meterId);
-  console.log(email);
   let trueStartTime = new Date(new Date().valueOf() - (120000 + Number(duration)));
+  console.log(trueStartTime);
 
   res.send('New usage event logged');
   MongoClient.connect(config.database, function(err, db) {
@@ -180,8 +179,6 @@ app.post('/usageEvent', function(req, res) { // Temporarily on /, not /api, beca
 
 
 apiRoutes.post('/addMeter', function(req, res) {
-  console.log(req);
-  res.send('You sent a usageEvent to Express');
   let {meterName} = req.body;
   let {email} = req.decoded;
 
@@ -198,10 +195,9 @@ apiRoutes.post('/addMeter', function(req, res) {
         assert.equal(err, null);
 
         console.log('\n-------------------------');
-        console.log('New Meter Added!');
+        console.log(`New Meter Added for user ${email}!`);
         console.log(meterId);
         console.log(meterName);
-        console.log(email);
         console.log(new Date());
 
         res.json({meterId, message: 'New meter added'});
@@ -295,7 +291,6 @@ apiRoutes.get('/getWeeklyUsage', function(req, res) {
     endTime.setDate( endTime.getDate() + 1 );
     endTime.setHours(0,0,0,0);
   }
-
   // Set search start time to 7 days before the date in the query
   let startTime = new Date( endTime );
   startTime.setDate( endTime.getDate() - 7 );
@@ -354,9 +349,6 @@ apiRoutes.get('/getMonthlyUsage', function(req, res) {
 
   let endTime = new Date(year+1,0,0,0,0,0,0);
   let startTime = new Date(year,0,0,0,0,0,0);
-
-  console.log('\n-------------------------');
-  console.log(`Usage event for ${email} pulled`);
 
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
