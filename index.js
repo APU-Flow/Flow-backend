@@ -187,6 +187,21 @@ apiRoutes.get('/getNextMeterId', function(req, res) {
   });
 });
 
+apiRoutes.get('/getMeterIdList', function(req, res) {
+  let {email} = req.decoded;
+  MongoClient.connect(config.database, function(err, db) {
+    assert.equal(null, err);
+    db.collection('meters').find({email}).toArray(function(err2, results) {
+      assert.equal(null, err2);
+      if (results.length > 0) {
+        res.json({meterIds: results});
+      } else {
+        res.status(204).json({message: 'No meters found attached to this account.', meterIds: []});
+      }
+    });
+  });
+});
+
 apiRoutes.post('/addMeter', function(req, res) {
   let {meterId, meterName} = req.body;
   let {email} = req.decoded;
