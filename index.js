@@ -106,11 +106,11 @@ app.post('/newUser', function(req, res) {
     assert.equal(null, err);
     db.collection('users').count({ email }, function(err, count) {
       if (count !== 0) {
-        res.status(409).json({message: 'This email adress is already registered to a user.'});
+        res.status(409).json({message: `This email adress: ${email} is already registered to a user.`});
         db.close();
       } else {
         console.log('\n-------------------------');
-        console.log('New user registered');
+        console.log(`New user registered: ${email}`);
         console.log(firstName);
         console.log(lastName);
         console.log(city);
@@ -149,16 +149,15 @@ app.post('/newUser', function(req, res) {
 
 app.post('/usageEvent', function(req, res) { // Temporarily on /, not /api, because token auth on the meter isn't working yet
   // Destructure new usage event fields from request body into individual variables
-  let {meterId, startTime, duration, totalVolume, email} = req.body;
+  let {meterId, duration, totalVolume, email} = req.body;
 
   console.log('\n-------------------------');
-  console.log('New Usage Event logged!');
-  console.log(startTime);
+  console.log(`New Usage Event logged for ${email}!`);
   console.log(duration);
   console.log(totalVolume);
   console.log(meterId);
-  console.log(email);
   let trueStartTime = new Date(new Date().valueOf() - (120000 + Number(duration)));
+  console.log(trueStartTime);
 
   res.json({message: 'New usage event logged'});
   MongoClient.connect(config.database, function(err, db) {
@@ -188,9 +187,22 @@ apiRoutes.get('/getNextMeterId', function(req, res) {
   });
 });
 
+apiRoutes.get('/getMeterIdList', function(req, res) {
+  let {email} = req.decoded;
+  MongoClient.connect(config.database, function(err, db) {
+    assert.equal(null, err);
+    db.collection('meters').find({email}).toArray(function(err2, results) {
+      assert.equal(null, err2);
+      if (results.length > 0) {
+        res.json({meterIds: results});
+      } else {
+        res.status(204).json({message: 'No meters found attached to this account.', meterIds: []});
+      }
+    });
+  });
+});
+
 apiRoutes.post('/addMeter', function(req, res) {
-  console.log(req);
-  res.send({message: 'You sent a usageEvent to Express'});
   let {meterId, meterName} = req.body;
   let {email} = req.decoded;
 
@@ -212,10 +224,9 @@ apiRoutes.post('/addMeter', function(req, res) {
         assert.equal(err3, null);
 
         console.log('\n-------------------------');
-        console.log('New Meter Added!');
+        console.log(`New Meter Added for user ${email}!`);
         console.log(meterId);
         console.log(meterName);
-        console.log(email);
         console.log(new Date());
 
         res.json({message: 'New meter added'});
@@ -309,7 +320,6 @@ apiRoutes.get('/getWeeklyUsage', function(req, res) {
     endTime.setDate( endTime.getDate() + 1 );
     endTime.setHours(0,0,0,0);
   }
-
   // Set search start time to 7 days before the date in the query
   let startTime = new Date( endTime );
   startTime.setDate( endTime.getDate() - 7 );
@@ -369,9 +379,6 @@ apiRoutes.get('/getMonthlyUsage', function(req, res) {
   let endTime = new Date(year+1,0,0,0,0,0,0);
   let startTime = new Date(year,0,0,0,0,0,0);
 
-  console.log('\n-------------------------');
-  console.log(`Usage event for ${email} pulled`);
-
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
     // Construct a query that finds relevant usage events
@@ -419,6 +426,24 @@ apiRoutes.get('/getMonthlyUsage', function(req, res) {
     }); // End find() query
   }); //End MongoClient connection
 }); // End route GET /getMonthlyUsage
+
+
+apiRoutes.get('/deleteUserData', function(req, res) {
+  let email = req.decoded.email;
+
+  MongoClient.connect(config.database, function(err, db) {
+    assert.equal(null, err);
+    db.collection('events').remove({email}, function(err, result) {
+      console.log();
+      console.log('___________________');
+      console.log('Event data for user ' + email + ' deleted');
+      console.log(new Date().toLocalString());
+      console.log('___________________');
+      console.log(result);
+    });
+    res.send({message: 'You have deleted your data, please email us with your name so we can sue you for leaving Flow. Thank you.'});
+  });
+});
 
 
 //-----
