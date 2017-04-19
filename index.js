@@ -182,7 +182,7 @@ apiRoutes.get('/getNextMeterId', function(req, res) {
     assert.equal(null, err);
     db.collection('meters').count({email}, function(err2, count) {
       assert.equal(null, err2);
-      req.json({nextId: count+1});
+      res.json({nextId: count+1});
     });
   });
 });
