@@ -298,7 +298,7 @@ apiRoutes.get('/getDailyUsage', function(req, res) {
     } else {
       // If the database Promise resolves empty, getUsageEvents returns an error message
       // JSON object that we just send on back to the user
-      res.status(204).send(events);
+      res.status(204).json(events);
     }
   }, (err) => {
     // This function is called if the Promise is rejected. Alert the user.
@@ -355,7 +355,7 @@ apiRoutes.get('/getWeeklyUsage', function(req, res) {
     } else {
       // If the database Promise resolves empty, getUsageEvents returns an error message
       // JSON object that we just send on back to the user
-      res.status(204).send(events);
+      res.status(204).json(events);
     }
   }, (err) => {
     // This function is called if the Promise is rejected. Alert the user.
