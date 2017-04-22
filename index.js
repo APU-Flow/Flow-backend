@@ -196,7 +196,7 @@ apiRoutes.get('/getMeterIdList', function(req, res) {
       if (results.length > 0) {
         res.json({meterIds: results});
       } else {
-        res.status(204).json({message: 'No meters found attached to this account.', meterIds: []});
+        res.status(204);
       }
     });
   });
@@ -355,7 +355,7 @@ apiRoutes.get('/getWeeklyUsage', function(req, res) {
     } else {
       // If the database Promise resolves empty, getUsageEvents returns an error message
       // JSON object that we just send on back to the user
-      res.status(204)
+      res.status(204);
     }
   }, (err) => {
     // This function is called if the Promise is rejected. Alert the user.
@@ -417,7 +417,7 @@ apiRoutes.get('/getMonthlyUsage', function(req, res) {
         res.status(500).json({message: err});
       } else if (currentDay === null) {
         // If the currentDay variable was never modified, then no events were found
-        res.status(204)
+        res.status(204);
       } else {
         // If we reach this point, then we have the aggregated usage data in the monthlyData array.
         // So, send the data array back to the user.
