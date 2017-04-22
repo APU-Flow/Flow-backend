@@ -66,10 +66,12 @@ app.post('/login', function(req, res) {
       // The user which matches should be the only item in the result toArray
       if (result.length !== 1) {
         db.close();
-        res.status(401).json({ message: (result.length === 0) ?
-          `No users found with email ${email}!`:
-          `Expected 0 or 1 users with email ${email}, found ${result.length}!`
-        });
+        if (result.length === 0) {
+          res.status(401).json({message: `No users found with email ${email}!`});
+        } else {
+          res.status(500).json({message: `Expected 0 or 1 users with email ${email}, found ${result.length}!`});
+        }
+        
         return;
       }
       let userObject = result[0];
@@ -150,31 +152,22 @@ app.post('/newUser', function(req, res) {
 app.post('/usageEvent', function(req, res) { // Temporarily on /, not /api, because token auth on the meter isn't working yet
   // Destructure new usage event fields from request body into individual variables
   let {meterId, duration, totalVolume, email} = req.body;
+  duration = Number(duration);
+
+  let trueStartTime = new Date(Date.now() - (120000 + duration));
 
   console.log('\n-------------------------');
   console.log(`New Usage Event logged for ${email}!`);
   console.log(duration);
   console.log(totalVolume);
   console.log(meterId);
-  let trueStartTime = new Date(new Date().valueOf() - (120000 + Number(duration)));
   console.log(trueStartTime);
 
-  res.json({message: 'New usage event logged'});
-  MongoClient.connect(config.database, function(err, db) {
-    assert.equal(null, err);
-    db.collection('events').insertOne({
-      meterId,
-      startTime: trueStartTime,
-      totalVolume,
-      duration,
-      email
-    }, function(err, result) {
-      assert.equal(err, null);
-      console.log('Inserted usage event into db');
-      db.close();
-    });
-  });
+  storeUsageEvent(meterId, trueStartTime, totalVolume, duration, email)
+    .then(() => res.json({message: 'New usage event logged'}))
+    .catch(() => res.status(500).json({message: 'Error logging new event to database!'}));
 });
+
 
 apiRoutes.get('/getNextMeterId', function(req, res) {
   let {email} = req.decoded;
@@ -201,6 +194,7 @@ apiRoutes.get('/getMeterIdList', function(req, res) {
     });
   });
 });
+
 
 apiRoutes.post('/addMeter', function(req, res) {
   let {meterId, meterName} = req.body;
@@ -449,6 +443,55 @@ apiRoutes.get('/deleteUserData', function(req, res) {
 //-----
 // Helper Methods
 //-----
+
+function storeUsageEvent(meterId, startTime, totalVolume, duration, email) {
+  return new Promise((resolve, reject) => {
+    let endTime = new Date(startTime.valueOf() + duration);
+    // Check to see if an event spans a date line. If it does, split it into multiple events
+    if (startTime.getDate() !== endTime.getDate()) {
+      // Make endTime represent the clean date mark
+      let nextDay = endTime.setHours(0,0,0,0);
+
+      // Calculate the portion of the duration and volume which occurred on the next day
+      let nextDayDuration = duration - (nextDay.valueOf() - startTime.valueOf());
+      let nextDayVolume = ((duration - nextDayDuration) / duration) * totalVolume;
+
+      // Recursively call this method to store the next day's worth of this event
+      storeUsageEvent(meterId, nextDay, nextDayVolume, nextDayDuration, email);
+
+      // Adjust this day's values to only contain data for this day
+      duration -= nextDayDuration;
+      totalVolume -= nextDayVolume;
+
+      // Continue on with the method - store the data
+    }
+
+    MongoClient.connect(config.database, function(err, db) {
+      if (err !== null)  {
+        reject();
+        return;
+      }
+
+      db.collection('events').insertOne({
+        meterId,
+        startTime,
+        totalVolume,
+        duration,
+        email
+      }, function(err, result) {
+
+        db.close();
+
+        if (err !== null) {
+          reject();
+        } else {
+          console.log('Inserted usage event into db');
+          resolve();
+        }
+      });
+    });
+  });
+}
 
 function getUsageEvents(email, meterId, startTime, endTime) {
   return new Promise((resolve, reject) => {
