@@ -432,7 +432,7 @@ apiRoutes.get('/deleteUserData', function(req, res) {
       console.log();
       console.log('___________________');
       console.log('Event data for user ' + email + ' deleted');
-      console.log(new Date().toLocalString());
+      console.log(new Date().toLocaleString());
       console.log('___________________');
       console.log(result);
     });
