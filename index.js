@@ -71,7 +71,7 @@ app.post('/login', function(req, res) {
         } else {
           res.status(500).json({message: `Expected 0 or 1 users with email ${email}, found ${result.length}!`});
         }
-        
+
         return;
       }
       let userObject = result[0];
@@ -133,12 +133,13 @@ app.post('/newUser', function(req, res) {
               password: hash
             }, function(err, result) {
               assert.equal(err, null);
+              res.json({userEmail: email });
               console.log('Inserted user into db');
               db.close();
             }); // End insertOne for the new user
           }); // End password hash
         }); // End saltGen
-        res.json({userEmail: email });
+
       }
     }); // End user count
   }); // End MongoClient connection
@@ -450,7 +451,7 @@ function storeUsageEvent(meterId, startTime, totalVolume, duration, email) {
     // Check to see if an event spans a date line. If it does, split it into multiple events
     if (startTime.getDate() !== endTime.getDate()) {
       // Make endTime represent the clean date mark
-      let nextDay = endTime.setHours(0,0,0,0);
+      let nextDay = new Date(endTime.setHours(0,0,0,0));
 
       // Calculate the portion of the duration and volume which occurred on the next day
       let nextDayDuration = duration - (nextDay.valueOf() - startTime.valueOf());
