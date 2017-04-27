@@ -136,11 +136,9 @@ app.post('/newUser', function(req, res) {
             }); // End insertOne for the new user
           }); // End password hash
         }); // End saltGen
-
       }
     }); // End user count
     if (insertCompleted == true) {
-      console
       assert.equal(err, null);
       res.json({userEmail: email });
       console.log('Inserted user into db');
