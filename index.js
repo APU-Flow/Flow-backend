@@ -106,6 +106,7 @@ app.post('/newUser', function(req, res) {
   email = email.toLowerCase();
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
+    let insertCompleted = false;
     db.collection('users').count({ email }, function(err, count) {
       if (count !== 0) {
         res.status(409).json({message: `This email adress: ${email} is already registered to a user.`});
@@ -132,16 +133,19 @@ app.post('/newUser', function(req, res) {
               email,
               password: hash
             }, function(err, result) {
-              assert.equal(err, null);
-              res.json({userEmail: email });
-              console.log('Inserted user into db');
-              db.close();
+              insertCompleted = true;
             }); // End insertOne for the new user
           }); // End password hash
         }); // End saltGen
 
       }
     }); // End user count
+    if (insertCompleted == true) {
+      assert.equal(err, null);
+      res.json({userEmail: email });
+      console.log('Inserted user into db');
+      db.close();
+    }
   }); // End MongoClient connection
 }); // End route
 
