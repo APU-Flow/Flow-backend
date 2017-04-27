@@ -120,6 +120,7 @@ app.post('/newUser', function(req, res) {
         console.log(state);
         console.log(email);
         console.log(new Date());
+        insertCompleted = true;
 
         bcrypt.genSalt(config.saltRounds, function(err, salt) {
           bcrypt.hash(password, salt, function(err, hash) {
@@ -132,8 +133,6 @@ app.post('/newUser', function(req, res) {
               state,
               email,
               password: hash
-            }, function(err, result) {
-              insertCompleted = true;
             }); // End insertOne for the new user
           }); // End password hash
         }); // End saltGen
@@ -141,6 +140,7 @@ app.post('/newUser', function(req, res) {
       }
     }); // End user count
     if (insertCompleted == true) {
+      console
       assert.equal(err, null);
       res.json({userEmail: email });
       console.log('Inserted user into db');
