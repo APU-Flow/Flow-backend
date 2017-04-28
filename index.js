@@ -105,57 +105,62 @@ app.post('/newUser', function(req, res) {
   // Destructure new user fields from request body into individual variables
   let {firstName, lastName, streetAddress, city, state, email, password} = req.body;
   email = email.toLowerCase();
-  MongoClient.connect(config.database, function(err, db) {
-    let insertCompleted = false;
-    async.series([
-      function(insertCompleted) {
-        db.collection('users').count({ email }, function(err, count) {
-          if (count !== 0) {
-            res.status(409).json({message: `This email adress: ${email} is already registered to a user.`});
-            db.close();
-          } else {
-            console.log('\n-------------------------');
-            console.log(`New user registered: ${email}`);
-            console.log(firstName);
-            console.log(lastName);
-            console.log(city);
-            console.log(state);
-            console.log(email);
-            console.log(new Date());
-            insertCompleted = true;
-
-            bcrypt.genSalt(config.saltRounds, function(err, salt) {
-              bcrypt.hash(password, salt, function(err, hash) {
-                assert.equal(null, err);
-                db.collection('users').insertOne({
-                  firstName,
-                  lastName,
-                  streetAddress,
-                  city,
-                  state,
-                  email,
-                  password: hash
-                }); // End insertOne for the new user
-              }); // End password hash
-            }); // End saltGen
-          }
-        }); // End user count
-      }], function(err) {
-      if (err) {
-        console.log(err);
-      }
-      else {
-        // Waits for defined functions to finish
-        assert.equal(null, err);
-        if (insertCompleted == true) {
-          assert.equal(err, null);
-          res.json({userEmail: email });
-          console.log('Inserted user into db');
+  let newUser = false;
+  let calls = [];
+  calls.push(function() {
+    MongoClient.connect(config.database, function(err, db) {
+      assert.equal(null, err);
+      db.collection('users').count({ email }, function(err, count) {
+        if (count !== 0) {
+          res.status(409).json({message: `This email adress: ${email} is already registered to a user.`});
+          db.close();
+        } else {
+          console.log('\n-------------------------');
+          console.log(`New user registered: ${email}`);
+          console.log(firstName);
+          console.log(lastName);
+          console.log(city);
+          console.log(state);
+          console.log(email);
+          console.log(new Date());
+          newUser = true;
           db.close();
         }
-      }
-    }); // End Async
-  }); // End MongoClient connection
+      });
+    });
+  });
+
+  async.parallel(calls, function(err, result) {
+    /* this code will run after all calls finished the job or
+       when any of the calls passes an error */
+    if (err) {
+      return console.log(err);
+    }
+    if (newUser) {
+      MongoClient.connect(config.database, function(err, db) {
+        assert.equal(null, err);
+        bcrypt.genSalt(config.saltRounds, function(err, salt) {
+          bcrypt.hash(password, salt, function(err, hash) {
+            assert.equal(null, err);
+            db.collection('users').insertOne({
+              firstName,
+              lastName,
+              streetAddress,
+              city,
+              state,
+              email,
+              password: hash
+            }); // End insertOne for the new user
+          }); // End password hash
+        }); // End saltGen
+        assert.equal(err, null);
+        res.json({userEmail: email });
+        console.log('Inserted user into db');
+        db.close();
+      }); // End connect
+    }
+  });
+>>>>>>> 2483a41680a7a1a74c0cc93c6bbd7b9a0135a413
 }); // End route
 
 
