@@ -133,6 +133,7 @@ app.post('/newUser', function(req, res) {
   async.parallel(calls, function(err, result) {
     /* this code will run after all calls finished the job or
        when any of the calls passes an error */
+    console.log("HERE");
     if (err) {
       return console.log(err);
     }
