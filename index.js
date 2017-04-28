@@ -130,14 +130,9 @@ app.post('/newUser', function(req, res) {
     });
   });
 
-  async.parallel(calls, function(err, result) {
-    /* this code will run after all calls finished the job or
-       when any of the calls passes an error */
-    console.log("HERE");
-    if (err) {
-      return console.log(err);
-    }
+  calls.push(function() {
     if (newUser) {
+      console.log('HERE');
       MongoClient.connect(config.database, function(err, db) {
         assert.equal(null, err);
         bcrypt.genSalt(config.saltRounds, function(err, salt) {
@@ -159,6 +154,14 @@ app.post('/newUser', function(req, res) {
         console.log('Inserted user into db');
         db.close();
       }); // End connect
+    }
+  });
+
+  async.parallel(calls, function(err, result) {
+    /* this code will run after all calls finished the job or
+       when any of the calls passes an error */
+    if (err) {
+      return console.log(err);
     }
   });
 }); // End route
