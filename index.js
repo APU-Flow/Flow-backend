@@ -107,6 +107,33 @@ app.post('/newUser', function(req, res) {
   email = email.toLowerCase();
   let newUser = false;
   let calls = [];
+
+  calls.push(function(callback) {
+    console.log('here1');
+    MongoClient.connect(config.database, function(err, db) {
+      assert.equal(null, err);
+      db.collection('users').count({ email }, function(err, count) {
+        if (count !== 0) {
+          res.status(409).json({message: `This email adress: ${email} is already registered to a user.`});
+          db.close();
+        } else {
+          console.log('\n-------------------------');
+          console.log(`New user registered: ${email}`);
+          console.log(firstName);
+          console.log(lastName);
+          console.log(city);
+          console.log(state);
+          console.log(email);
+          console.log(new Date());
+          newUser = true;
+          db.close();
+        }
+        callback();
+      });
+    });
+  });
+
+
   calls.push(function(callback) {
     console.log('here2');
     if (newUser) {
@@ -135,31 +162,9 @@ app.post('/newUser', function(req, res) {
         db.close();
       }); // End connect
     }
-  });
-
-  calls.push(function(callback) {
-    console.log('here1');
-    MongoClient.connect(config.database, function(err, db) {
-      assert.equal(null, err);
-      db.collection('users').count({ email }, function(err, count) {
-        if (count !== 0) {
-          res.status(409).json({message: `This email adress: ${email} is already registered to a user.`});
-          db.close();
-        } else {
-          console.log('\n-------------------------');
-          console.log(`New user registered: ${email}`);
-          console.log(firstName);
-          console.log(lastName);
-          console.log(city);
-          console.log(state);
-          console.log(email);
-          console.log(new Date());
-          newUser = true;
-          db.close();
-        }
-        callback();
-      });
-    });
+    else {
+      callback();
+    }
   });
 
 
