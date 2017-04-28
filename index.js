@@ -108,29 +108,6 @@ app.post('/newUser', function(req, res) {
   let newUser = false;
   let calls = [];
   calls.push(function() {
-    MongoClient.connect(config.database, function(err, db) {
-      assert.equal(null, err);
-      db.collection('users').count({ email }, function(err, count) {
-        if (count !== 0) {
-          res.status(409).json({message: `This email adress: ${email} is already registered to a user.`});
-          db.close();
-        } else {
-          console.log('\n-------------------------');
-          console.log(`New user registered: ${email}`);
-          console.log(firstName);
-          console.log(lastName);
-          console.log(city);
-          console.log(state);
-          console.log(email);
-          console.log(new Date());
-          newUser = true;
-          db.close();
-        }
-      });
-    });
-  });
-
-  calls.push(function() {
     if (newUser) {
       console.log('HERE');
       MongoClient.connect(config.database, function(err, db) {
@@ -156,6 +133,30 @@ app.post('/newUser', function(req, res) {
       }); // End connect
     }
   });
+
+  calls.push(function() {
+    MongoClient.connect(config.database, function(err, db) {
+      assert.equal(null, err);
+      db.collection('users').count({ email }, function(err, count) {
+        if (count !== 0) {
+          res.status(409).json({message: `This email adress: ${email} is already registered to a user.`});
+          db.close();
+        } else {
+          console.log('\n-------------------------');
+          console.log(`New user registered: ${email}`);
+          console.log(firstName);
+          console.log(lastName);
+          console.log(city);
+          console.log(state);
+          console.log(email);
+          console.log(new Date());
+          newUser = true;
+          db.close();
+        }
+      });
+    });
+  });
+
 
   async.parallel(calls, function(err, result) {
     /* this code will run after all calls finished the job or
