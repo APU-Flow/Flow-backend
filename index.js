@@ -108,8 +108,8 @@ app.post('/newUser', function(req, res) {
   let newUser = false;
   let calls = [];
   calls.push(function() {
+    console.log('here2');
     if (newUser) {
-      console.log('HERE');
       MongoClient.connect(config.database, function(err, db) {
         assert.equal(null, err);
         bcrypt.genSalt(config.saltRounds, function(err, salt) {
@@ -135,6 +135,7 @@ app.post('/newUser', function(req, res) {
   });
 
   calls.push(function() {
+    console.log('here2');
     MongoClient.connect(config.database, function(err, db) {
       assert.equal(null, err);
       db.collection('users').count({ email }, function(err, count) {
@@ -158,7 +159,7 @@ app.post('/newUser', function(req, res) {
   });
 
 
-  async.parallel(calls, function(err, result) {
+  async.series(calls, function(err, result) {
     /* this code will run after all calls finished the job or
        when any of the calls passes an error */
     if (err) {
