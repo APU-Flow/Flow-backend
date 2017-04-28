@@ -160,7 +160,6 @@ app.post('/newUser', function(req, res) {
       }); // End connect
     }
   });
->>>>>>> 2483a41680a7a1a74c0cc93c6bbd7b9a0135a413
 }); // End route
 
 
