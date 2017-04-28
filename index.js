@@ -107,7 +107,7 @@ app.post('/newUser', function(req, res) {
   email = email.toLowerCase();
   let newUser = false;
   let calls = [];
-  calls.push(function() {
+  calls.push(function(callback) {
     console.log('here2');
     if (newUser) {
       MongoClient.connect(config.database, function(err, db) {
@@ -122,8 +122,11 @@ app.post('/newUser', function(req, res) {
               city,
               state,
               email,
-              password: hash
-            }); // End insertOne for the new user
+              password: hash},
+              function() {
+                callback();
+              }
+            ); // End insertOne for the new user
           }); // End password hash
         }); // End saltGen
         assert.equal(err, null);
@@ -134,7 +137,7 @@ app.post('/newUser', function(req, res) {
     }
   });
 
-  calls.push(function() {
+  calls.push(function(callback) {
     console.log('here2');
     MongoClient.connect(config.database, function(err, db) {
       assert.equal(null, err);
@@ -154,6 +157,7 @@ app.post('/newUser', function(req, res) {
           newUser = true;
           db.close();
         }
+        callback();
       });
     });
   });
