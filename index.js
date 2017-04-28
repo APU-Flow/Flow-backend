@@ -138,7 +138,7 @@ app.post('/newUser', function(req, res) {
   });
 
   calls.push(function(callback) {
-    console.log('here2');
+    console.log('here1');
     MongoClient.connect(config.database, function(err, db) {
       assert.equal(null, err);
       db.collection('users').count({ email }, function(err, count) {
