@@ -133,9 +133,9 @@ app.post('/newUser', function(req, res) {
               password: hash
             }, function(err, result) {
               assert.equal(err, null);
-              res.json({userEmail: email });
               console.log('Inserted user into db');
               db.close();
+              res.json({userEmail: email});
             }); // End insertOne for the new user
           }); // End password hash
         }); // End saltGen
