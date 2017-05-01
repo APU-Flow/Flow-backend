@@ -153,7 +153,7 @@ app.post('/usageEvent', function(req, res) { // Temporarily on /, not /api, beca
   let {meterId, duration, totalVolume, email} = req.body;
   duration = Number(duration);
 
-  let trueStartTime = new Date(Date.now() - (120000 + duration));
+  let trueStartTime = new Date(Date.now() - (20000 + duration));
 
   console.log('\n____________________');
   console.log(`New Usage Event logged for ${email}!`);
