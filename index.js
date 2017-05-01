@@ -421,7 +421,7 @@ apiRoutes.get('/getMonthlyUsage', function(req, res) {
 }); // End route GET /getMonthlyUsage
 
 
-apiRoutes.get('/`deleteUserData', function(req, res) {
+apiRoutes.get('/deleteUserData', function(req, res) {
   let email = req.decoded.email;
 
   MongoClient.connect(config.database, function(err, db) {
