@@ -56,9 +56,9 @@ app.post('/login', function(req, res) {
   let {email, password} = req.body;
   email = email.toLowerCase();
 
-  console.log('\n-------------------------');
+  console.log('\n____________________');
   console.log(`The user ${email} attempted to log in`);
-  console.log(new Date());
+  console.log(new Date().toLocaleString());
 
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
@@ -75,8 +75,6 @@ app.post('/login', function(req, res) {
         return;
       }
       let userObject = result[0];
-
-      console.log('Found in database:', result);
       db.close();
 
       // If our user is authenticated successfully, generate a token and respond with it
@@ -111,14 +109,14 @@ app.post('/newUser', function(req, res) {
         res.status(409).json({message: `This email adress: ${email} is already registered to a user.`});
         db.close();
       } else {
-        console.log('\n-------------------------');
+        console.log('\n____________________');
         console.log(`New user registered: ${email}`);
         console.log(firstName);
         console.log(lastName);
         console.log(city);
         console.log(state);
         console.log(email);
-        console.log(new Date());
+        console.log(new Date().toLocaleString());
 
         bcrypt.genSalt(config.saltRounds, function(err, salt) {
           bcrypt.hash(password, salt, function(err, hash) {
@@ -133,9 +131,9 @@ app.post('/newUser', function(req, res) {
               password: hash
             }, function(err, result) {
               assert.equal(err, null);
-              res.json({userEmail: email });
               console.log('Inserted user into db');
               db.close();
+              res.json({userEmail: email});
             }); // End insertOne for the new user
           }); // End password hash
         }); // End saltGen
@@ -157,7 +155,7 @@ app.post('/usageEvent', function(req, res) { // Temporarily on /, not /api, beca
 
   let trueStartTime = new Date(Date.now() - (120000 + duration));
 
-  console.log('\n-------------------------');
+  console.log('\n____________________');
   console.log(`New Usage Event logged for ${email}!`);
   console.log(duration);
   console.log(totalVolume);
@@ -218,11 +216,11 @@ apiRoutes.post('/addMeter', function(req, res) {
       }, function(err3, result) {
         assert.equal(err3, null);
 
-        console.log('\n-------------------------');
+        console.log('\n____________________');
         console.log(`New Meter Added for user ${email}!`);
         console.log(meterId);
         console.log(meterName);
-        console.log(new Date());
+        console.log(new Date().toLocaleString());
 
         res.json({message: 'New meter added'});
         db.close();
@@ -429,12 +427,9 @@ apiRoutes.get('/deleteUserData', function(req, res) {
   MongoClient.connect(config.database, function(err, db) {
     assert.equal(null, err);
     db.collection('events').remove({email}, function(err, result) {
-      console.log();
-      console.log('___________________');
+      console.log('\n____________________');
       console.log('Event data for user ' + email + ' deleted');
       console.log(new Date().toLocaleString());
-      console.log('___________________');
-      console.log(result);
     });
     res.send({message: 'You have deleted your data, please email us with your name so we can sue you for leaving Flow. Thank you.'});
   });
@@ -503,7 +498,7 @@ function getUsageEvents(email, meterId, startTime, endTime) {
     }
     assert.notEqual(null, email);
 
-    console.log('\n-------------------------');
+    console.log('\n____________________');
     console.log(`Usage event for ${email} pulled`);
 
     MongoClient.connect(config.database, function(err, db) {
