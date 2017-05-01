@@ -254,6 +254,10 @@ apiRoutes.get('/getDailyUsage', function(req, res) {
       // Create an array that will contain 12 hours worth of aggregate data
       let hourlyData = [0,0,0,0,0,0,0,0,0,0,0,0];
 
+      // Fix start/end window calculation problem
+      let startHours = startTime.getHours();
+      if ( startHours > endTime.getHours() ) startHours -= 24;
+
       // Iterate through the events found in the database
       for (let i = 0; i < events.length; i++) {
         // Destructure the current object into named variables that are easier to use
@@ -261,8 +265,9 @@ apiRoutes.get('/getDailyUsage', function(req, res) {
         // Calculate the hour at which the current event begins
         eventTime = new Date(eventTime);
         let currentHour = eventTime.getHours();
+
         // Offset currentHour by our search start time so that it represents an index in our array
-        currentHour -= startTime.getHours();
+        currentHour -= startHours;
         if ( currentHour < 0 ) currentHour += 12; // Fix the AM/PM problem by adding 12 to "negative" hours
 
         // Handle events which span multiple hour-slots
