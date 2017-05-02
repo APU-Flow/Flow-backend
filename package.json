@@ -1,17 +1,19 @@
 {
   "name": "flow-backend",
   "version": "1.0.0",
-  "description": "Backend code for flow project",
+  "description": "Backend code for Flow project",
+  "private": true,
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Flow team",
+  "author": "Flow Team",
   "repository": {
-    "git": "https://github.com/APU-Flow/Flow-backend.git"
+    "type": "git",
+    "url": "https://github.com/APU-Flow/Flow-backend.git"
   },
-  "license": "ISC",
+  "license": "Apache-2.0",
   "dependencies": {
     "assert": "^1.4.1",
     "bcrypt": "^1.0.2",
